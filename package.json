@@ -1,0 +1,63 @@
+{
+  "name": "react-code-panes",
+  "version": "0.1.0",
+  "description": "VS Code-style split pane and tab system for React",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ynng/react-code-panes.git"
+  },
+  "homepage": "https://github.com/Ynng/react-code-panes#readme",
+  "bugs": {
+    "url": "https://github.com/Ynng/react-code-panes/issues"
+  },
+  "keywords": [
+    "react",
+    "workbench",
+    "editor",
+    "tabs",
+    "split-pane",
+    "ide"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./styles.css": "./dist/index.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test:e2e": "playwright test"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@storybook/addon-essentials": "^8.4.0",
+    "@storybook/react": "^8.4.0",
+    "@storybook/react-vite": "^8.4.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "storybook": "^8.4.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0"
+  },
+  "license": "MIT"
+}

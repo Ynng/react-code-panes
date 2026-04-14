@@ -1,0 +1,765 @@
+/* ─── Workbench ──────────────────────────────────────────── */
+
+.mosaic-workbench {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--mosaic-bg);
+  color: var(--mosaic-editor-fg);
+  font-family: var(--mosaic-font-family);
+  font-size: var(--mosaic-font-size);
+  position: relative;
+}
+
+.mosaic-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mosaic-content-row {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mosaic-sidebar-container {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.mosaic-editor-area {
+  flex: 1;
+  min-width: 120px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mosaic-center-column {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mosaic-panel-container {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* ─── Toolbar ────────────────────────────────────────────── */
+
+.mosaic-toolbar {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  min-height: 30px;
+  background: var(--mosaic-bg-secondary);
+  border-bottom: 1px solid var(--mosaic-border);
+  padding: 0 8px;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.mosaic-toolbar-left,
+.mosaic-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.mosaic-toolbar-center {
+  flex: 1;
+}
+
+.mosaic-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--mosaic-tab-fg);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+}
+
+.mosaic-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mosaic-tab-fg-active);
+}
+
+.mosaic-toolbar-btn.active {
+  color: var(--mosaic-tab-fg-active);
+}
+
+/* ─── Activity Bar ───────────────────────────────────────── */
+
+.mosaic-activitybar {
+  display: flex;
+  flex-direction: column;
+  width: var(--mosaic-activitybar-width);
+  min-width: var(--mosaic-activitybar-width);
+  background: var(--mosaic-activitybar-bg);
+  align-items: center;
+  padding-top: 4px;
+  user-select: none;
+}
+
+.mosaic-activitybar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  color: var(--mosaic-activitybar-fg);
+  position: relative;
+  border-left: 2px solid transparent;
+  transition: color 0.1s;
+}
+
+.mosaic-activitybar-item:hover {
+  color: var(--mosaic-activitybar-fg-active);
+}
+
+.mosaic-activitybar-item.active {
+  color: var(--mosaic-activitybar-fg-active);
+  border-left-color: var(--mosaic-activitybar-indicator);
+}
+
+.mosaic-activitybar-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────── */
+
+.mosaic-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--mosaic-sidebar-bg);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.mosaic-sidebar-title {
+  display: flex;
+  align-items: center;
+  height: 35px;
+  min-height: 35px;
+  padding: 0 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mosaic-sidebar-header-fg);
+  user-select: none;
+}
+
+.mosaic-sidebar-sections {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.mosaic-sidebar-section {
+  border-bottom: 1px solid var(--mosaic-sidebar-section-border);
+  flex-shrink: 0;
+}
+
+/* Last expanded section fills remaining space */
+.mosaic-sidebar-section.fill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex-shrink: 1;
+}
+
+.mosaic-sidebar-section.fill .mosaic-sidebar-section-content {
+  flex: 1;
+  min-height: 0;
+}
+
+/* VS Code-style drop overlay: semi-transparent fill on top or bottom half */
+.mosaic-section-drop-overlay {
+  position: absolute;
+  background: var(--mosaic-drop-bg);
+  z-index: 10;
+  pointer-events: none;
+  transition: top 70ms ease-out, bottom 70ms ease-out, height 70ms ease-out;
+}
+
+/* For collapsed/small sections: 2px border indicator instead of area fill */
+.mosaic-section-drop-border {
+  position: absolute;
+  height: 2px;
+  background: var(--mosaic-drop-border);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Overlay for empty area below all sections */
+.mosaic-section-drop-empty-overlay {
+  flex: 1;
+  min-height: 30px;
+  background: var(--mosaic-drop-bg);
+  pointer-events: none;
+}
+
+.mosaic-sidebar-section-header-drag-handle {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.mosaic-sidebar-section-header-drag-handle:active {
+  cursor: grabbing;
+}
+
+.mosaic-sidebar-section-header {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mosaic-sidebar-header-fg);
+  cursor: pointer;
+  user-select: none;
+  background: var(--mosaic-sidebar-header-bg);
+}
+
+.mosaic-sidebar-section-header:hover {
+  background: var(--mosaic-bg-tertiary);
+}
+
+.mosaic-sidebar-section-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 2px;
+  transition: transform 0.15s ease;
+  font-size: 10px;
+}
+
+.mosaic-sidebar-section-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.mosaic-sidebar-section-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.mosaic-sidebar-section-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mosaic-sidebar-section-content::-webkit-scrollbar-thumb {
+  background: var(--mosaic-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+/* ─── Split Pane / Sash ─────────────────────────────────── */
+
+.mosaic-split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.mosaic-split.horizontal {
+  flex-direction: row;
+}
+
+.mosaic-split.vertical {
+  flex-direction: column;
+}
+
+.mosaic-split-child {
+  overflow: hidden;
+  position: relative;
+}
+
+.mosaic-sash {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  background: transparent;
+  transition: background-color 0.3s ease 0.15s;
+}
+
+/* Extend hit area with pseudo-element */
+.mosaic-sash::after {
+  content: "";
+  position: absolute;
+}
+
+.mosaic-sash.horizontal {
+  width: var(--mosaic-sash-size);
+  cursor: col-resize;
+}
+
+.mosaic-sash.horizontal::after {
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  right: -3px;
+}
+
+.mosaic-sash.vertical {
+  height: var(--mosaic-sash-size);
+  cursor: row-resize;
+}
+
+.mosaic-sash.vertical::after {
+  left: 0;
+  right: 0;
+  top: -3px;
+  bottom: -3px;
+}
+
+.mosaic-sash:hover,
+.mosaic-sash.dragging {
+  background: var(--mosaic-sash-hover);
+  transition-delay: 0s;
+}
+
+/* Corner sash: sits at intersection of two perpendicular sashes */
+.mosaic-corner-sash {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  z-index: 25;
+  cursor: nwse-resize;
+}
+
+.mosaic-corner-sash:hover {
+  background: var(--mosaic-sash-hover);
+  border-radius: 2px;
+}
+
+/* ─── Tab Bar ────────────────────────────────────────────── */
+
+.mosaic-tabbar {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: 35px;
+  min-height: 35px;
+  background: var(--mosaic-tab-bar-bg);
+  border-bottom: 1px solid var(--mosaic-tab-bar-border);
+  overflow: hidden;
+  user-select: none;
+}
+
+.mosaic-tabbar-scroll {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mosaic-scrollbar-thumb) transparent;
+}
+
+.mosaic-tabbar-scroll::-webkit-scrollbar {
+  height: 2px;
+}
+
+.mosaic-tabbar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mosaic-tabbar-scroll::-webkit-scrollbar-thumb {
+  background: var(--mosaic-scrollbar-thumb);
+}
+
+.mosaic-tabbar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--mosaic-scrollbar-thumb-hover);
+}
+
+.mosaic-tabbar-actions {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.mosaic-tabbar-split-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--mosaic-tab-fg);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+}
+
+.mosaic-tabbar-split-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mosaic-tab-fg-active);
+}
+
+.mosaic-tab {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 100%;
+  padding: 0 10px;
+  min-width: 80px;
+  max-width: 200px;
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--mosaic-tab-bg);
+  color: var(--mosaic-tab-fg);
+  border-right: 1px solid var(--mosaic-tab-bar-border);
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.1s;
+}
+
+.mosaic-tab:hover {
+  background: var(--mosaic-tab-bg-hover);
+}
+
+.mosaic-tab.active {
+  background: var(--mosaic-tab-bg-active);
+  color: var(--mosaic-tab-fg-active);
+}
+
+/* Active tab in focused group: colored bottom border */
+.mosaic-tabbar.focused .mosaic-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--mosaic-tab-border-active);
+}
+
+/* Active tab in unfocused group: dimmed bottom border */
+.mosaic-tabbar:not(.focused) .mosaic-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--mosaic-border);
+}
+
+/* Unfocused group: dim the active tab text slightly */
+.mosaic-tabbar:not(.focused) .mosaic-tab.active {
+  color: var(--mosaic-tab-fg);
+}
+
+.mosaic-tab.preview .mosaic-tab-label {
+  font-style: italic;
+}
+
+.mosaic-tab.drop-target-left {
+  box-shadow: inset 2px 0 0 var(--mosaic-drop-border);
+}
+
+.mosaic-tab.drop-target-right {
+  box-shadow: inset -2px 0 0 var(--mosaic-drop-border);
+}
+
+.mosaic-tab-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.mosaic-tab-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 35px;
+}
+
+.mosaic-tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.1s, background-color 0.1s;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.mosaic-tab:hover .mosaic-tab-close,
+.mosaic-tab.active .mosaic-tab-close {
+  opacity: 1;
+}
+
+.mosaic-tab-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mosaic-tab-dirty {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mosaic-tab-dirty);
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.mosaic-tab.dirty .mosaic-tab-close {
+  display: none;
+}
+
+.mosaic-tab.dirty .mosaic-tab-dirty {
+  display: block;
+}
+
+.mosaic-tab:not(.dirty) .mosaic-tab-dirty {
+  display: none;
+}
+
+/* ─── Editor Group ───────────────────────────────────────── */
+
+.mosaic-editor-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--mosaic-editor-bg);
+  overflow: hidden;
+  position: relative;
+}
+
+.mosaic-editor-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.mosaic-editor-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.mosaic-editor-content::-webkit-scrollbar-thumb {
+  background: var(--mosaic-scrollbar-thumb);
+}
+
+.mosaic-editor-content::-webkit-scrollbar-thumb:hover {
+  background: var(--mosaic-scrollbar-thumb-hover);
+}
+
+.mosaic-editor-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--mosaic-editor-empty-fg);
+  font-size: 14px;
+  gap: 8px;
+}
+
+/* ─── Drop Overlay ───────────────────────────────────────── */
+
+.mosaic-drop-overlay {
+  position: absolute;
+  pointer-events: none;
+  background: var(--mosaic-drop-bg);
+  border: 1px solid var(--mosaic-drop-border);
+  z-index: 100;
+  transition: all 0.1s ease;
+}
+
+/* ─── Resizer (workbench-level sidebar sash) ─────────────── */
+
+.mosaic-resizer {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 20;
+  background: var(--mosaic-border);
+}
+
+.mosaic-resizer.horizontal {
+  width: 1px;
+  cursor: col-resize;
+}
+
+.mosaic-resizer.horizontal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  right: -3px;
+}
+
+.mosaic-resizer.vertical {
+  height: 1px;
+  cursor: row-resize;
+}
+
+.mosaic-resizer.vertical::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -3px;
+  bottom: -3px;
+}
+
+.mosaic-resizer:hover {
+  background: var(--mosaic-sash-hover);
+}
+
+/* ─── Panel (bottom bar) ─────────────────────────────────── */
+
+.mosaic-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--mosaic-bg-secondary);
+  overflow: hidden;
+}
+
+.mosaic-panel-header {
+  display: flex;
+  align-items: center;
+  height: 35px;
+  min-height: 35px;
+  background: var(--mosaic-bg-secondary);
+  border-bottom: 1px solid var(--mosaic-border);
+  padding: 0 8px;
+  user-select: none;
+}
+
+.mosaic-panel-tabs {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  gap: 0;
+  height: 100%;
+}
+
+.mosaic-panel-tab {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mosaic-tab-fg);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  white-space: nowrap;
+  gap: 6px;
+}
+
+.mosaic-panel-tab:hover {
+  color: var(--mosaic-tab-fg-active);
+}
+
+.mosaic-panel-tab.active {
+  color: var(--mosaic-tab-fg-active);
+  border-bottom-color: var(--mosaic-tab-border-active);
+}
+
+/* VS Code-style insertion line indicators */
+.mosaic-panel-tab.insert-left {
+  box-shadow: -2px 0 0 0 var(--mosaic-drop-border);
+}
+
+.mosaic-panel-tab.insert-right {
+  box-shadow: 2px 0 0 0 var(--mosaic-drop-border);
+}
+
+.mosaic-panel-tab-icon {
+  display: flex;
+  align-items: center;
+}
+
+.mosaic-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mosaic-panel-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--mosaic-tab-fg);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+}
+
+.mosaic-panel-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mosaic-tab-fg-active);
+}
+
+.mosaic-panel-content {
+  flex: 1;
+  overflow: auto;
+  background: var(--mosaic-editor-bg);
+  min-height: 0;
+}
+
+.mosaic-panel-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.mosaic-panel-content::-webkit-scrollbar-thumb {
+  background: var(--mosaic-scrollbar-thumb);
+}

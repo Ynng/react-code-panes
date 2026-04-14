@@ -1,0 +1,90 @@
+/* Default (dark) theme — scoped to the workbench container */
+.mosaic-workbench,
+.mosaic-workbench[data-theme="dark"] {
+  --mosaic-bg: #1e1e1e;
+  --mosaic-bg-secondary: #252526;
+  --mosaic-bg-tertiary: #2d2d2d;
+  --mosaic-border: #3c3c3c;
+
+  --mosaic-tab-bg: #2d2d2d;
+  --mosaic-tab-bg-active: #1e1e1e;
+  --mosaic-tab-bg-hover: #2a2d2e;
+  --mosaic-tab-fg: #969696;
+  --mosaic-tab-fg-active: #ffffff;
+  --mosaic-tab-border-active: #007acc;
+  --mosaic-tab-dirty: #e8e8e8;
+  --mosaic-tab-bar-bg: #252526;
+  --mosaic-tab-bar-border: #3c3c3c;
+
+  --mosaic-sash-size: 4px;
+  --mosaic-sash-hover: #007acc;
+
+  --mosaic-sidebar-bg: #252526;
+  --mosaic-sidebar-fg: #cccccc;
+  --mosaic-sidebar-header-bg: #2d2d2d;
+  --mosaic-sidebar-header-fg: #bbbbbb;
+  --mosaic-sidebar-section-border: #3c3c3c;
+
+  --mosaic-activitybar-bg: #333333;
+  --mosaic-activitybar-fg: #858585;
+  --mosaic-activitybar-fg-active: #ffffff;
+  --mosaic-activitybar-indicator: #ffffff;
+  --mosaic-activitybar-width: 48px;
+
+  --mosaic-drop-bg: rgba(0, 122, 204, 0.18);
+  --mosaic-drop-border: #007acc;
+
+  --mosaic-editor-bg: #1e1e1e;
+  --mosaic-editor-fg: #cccccc;
+  --mosaic-editor-empty-fg: #585858;
+
+  --mosaic-scrollbar-thumb: rgba(121, 121, 121, 0.4);
+  --mosaic-scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
+
+  --mosaic-focus-ring: #007acc;
+
+  --mosaic-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mosaic-font-size: 13px;
+}
+
+.mosaic-workbench[data-theme="light"] {
+  --mosaic-bg: #ffffff;
+  --mosaic-bg-secondary: #f3f3f3;
+  --mosaic-bg-tertiary: #ececec;
+  --mosaic-border: #e0e0e0;
+
+  --mosaic-tab-bg: #ececec;
+  --mosaic-tab-bg-active: #ffffff;
+  --mosaic-tab-bg-hover: #e8e8e8;
+  --mosaic-tab-fg: #6e6e6e;
+  --mosaic-tab-fg-active: #333333;
+  --mosaic-tab-border-active: #007acc;
+  --mosaic-tab-dirty: #333333;
+  --mosaic-tab-bar-bg: #f3f3f3;
+  --mosaic-tab-bar-border: #e0e0e0;
+
+  --mosaic-sash-hover: #007acc;
+
+  --mosaic-sidebar-bg: #f3f3f3;
+  --mosaic-sidebar-fg: #333333;
+  --mosaic-sidebar-header-bg: #e8e8e8;
+  --mosaic-sidebar-header-fg: #555555;
+  --mosaic-sidebar-section-border: #e0e0e0;
+
+  --mosaic-activitybar-bg: #2c2c2c;
+  --mosaic-activitybar-fg: #858585;
+  --mosaic-activitybar-fg-active: #ffffff;
+  --mosaic-activitybar-indicator: #ffffff;
+
+  --mosaic-drop-bg: rgba(0, 122, 204, 0.12);
+  --mosaic-drop-border: #007acc;
+
+  --mosaic-editor-bg: #ffffff;
+  --mosaic-editor-fg: #333333;
+  --mosaic-editor-empty-fg: #b0b0b0;
+
+  --mosaic-scrollbar-thumb: rgba(100, 100, 100, 0.3);
+  --mosaic-scrollbar-thumb-hover: rgba(100, 100, 100, 0.5);
+
+  --mosaic-focus-ring: #007acc;
+}

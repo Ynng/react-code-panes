@@ -1,0 +1,7 @@
+.mosaic-workbench *,
+.mosaic-workbench *::before,
+.mosaic-workbench *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
