@@ -1,11 +1,13 @@
 import {
-  createContext,
-  cloneElement,
-  isValidElement,
-  useContext,
-  useCallback,
-  useReducer,
+  Children,
+  ReactElement,
   ReactNode,
+  cloneElement,
+  createContext,
+  isValidElement,
+  useCallback,
+  useContext,
+  useReducer,
   Dispatch,
 } from "react";
 import {
@@ -53,12 +55,37 @@ function updateMru(mru: string[], tabId: string): string[] {
   return [tabId, ...mru.filter((id) => id !== tabId)];
 }
 
+function cloneElementTree(node: ReactNode, keyPrefix: string): ReactNode {
+  if (!isValidElement(node)) return node;
+
+  const children = node.props.children
+    ? Children.map(node.props.children, (child, index) =>
+        cloneElementTree(child, `${keyPrefix}:${index}`)
+      )
+    : node.props.children;
+
+  return cloneElement(
+    node as ReactElement,
+    { key: node.key ?? keyPrefix },
+    children,
+  );
+}
+
 function cloneTabForSplit(tab: Tab): Tab {
   return {
     ...tab,
-    content: isValidElement(tab.content)
-      ? cloneElement(tab.content, { key: `${tab.id}__split_clone` })
-      : tab.content,
+    content: cloneElementTree(tab.content, `${tab.id}__split_clone`) as ReactElement,
+  };
+}
+
+function mergeExistingTab(existing: Tab, incoming: Tab): Tab {
+  return {
+    ...existing,
+    ...incoming,
+    isDirty: incoming.isDirty ?? existing.isDirty,
+    isPinned: incoming.isPinned ?? existing.isPinned,
+    isPreview: incoming.isPreview ?? existing.isPreview,
+    closable: incoming.closable ?? existing.closable,
   };
 }
 
@@ -75,8 +102,10 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
       }
 
       const group = state.groups[targetGroupId] ?? createEmptyGroup();
-      const existing = group.tabs.find((t) => t.id === action.tab.id);
-      if (existing) {
+      const existingIndex = group.tabs.findIndex((t) => t.id === action.tab.id);
+      if (existingIndex >= 0) {
+        const nextTabs = [...group.tabs];
+        nextTabs[existingIndex] = mergeExistingTab(nextTabs[existingIndex], action.tab);
         return {
           ...state,
           activeGroupId: targetGroupId,
@@ -84,6 +113,7 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
             ...state.groups,
             [targetGroupId]: {
               ...group,
+              tabs: nextTabs,
               activeTabId: action.tab.id,
               mruOrder: updateMru(group.mruOrder, action.tab.id),
             },
@@ -202,7 +232,10 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
       const treeGroupIds = new Set(getAllGroupIds(state.splitTree));
       for (const [groupId, group] of Object.entries(state.groups)) {
         if (!treeGroupIds.has(groupId)) continue;
-        if (group.tabs.some((t) => t.id === action.tab.id)) {
+        const existingIndex = group.tabs.findIndex((t) => t.id === action.tab.id);
+        if (existingIndex >= 0) {
+          const nextTabs = [...group.tabs];
+          nextTabs[existingIndex] = mergeExistingTab(nextTabs[existingIndex], action.tab);
           return {
             ...state,
             activeGroupId: groupId,
@@ -210,6 +243,7 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
               ...state.groups,
               [groupId]: {
                 ...group,
+                tabs: nextTabs,
                 activeTabId: action.tab.id,
                 mruOrder: updateMru(group.mruOrder, action.tab.id),
               },
@@ -554,6 +588,11 @@ export function WorkbenchProvider({
 }
 
 // ─── Convenience Hooks ───────────────────────────────────────
+
+export function useActiveWorkbenchGroupId() {
+  const { state } = useWorkbench();
+  return state.activeGroupId ?? Object.keys(state.groups)[0] ?? null;
+}
 
 export function useWorkbenchActions() {
   const { dispatch } = useWorkbench();

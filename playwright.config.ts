@@ -3,6 +3,7 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30000,
+  workers: 1,
   use: {
     baseURL: "http://localhost:6006",
     headless: true,
@@ -13,7 +14,5 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 30000,
   },
-  projects: [
-    { name: "chromium", use: { browserName: "chromium" } },
-  ],
+  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
 });

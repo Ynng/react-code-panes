@@ -1,7 +1,7 @@
 // ─── Components ──────────────────────────────────────────────
 export { Workbench } from "./components/Workbench";
 export type { WorkbenchProps } from "./components/Workbench";
-export { useWorkbench, useWorkbenchActions } from "./context/WorkbenchContext";
+export { useWorkbench, useWorkbenchActions, useActiveWorkbenchGroupId } from "./context/WorkbenchContext";
 export type { Action } from "./context/WorkbenchContext";
 export { WorkbenchProvider } from "./context/WorkbenchContext";
 export { SplitPane } from "./components/SplitPane";
@@ -36,6 +36,7 @@ export type {
   PanelConfig,
   DropPosition,
   WorkbenchState,
+  TabFactory,
   TabDragData,
   GroupDragData,
   DragData,

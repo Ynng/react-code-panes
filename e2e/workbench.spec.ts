@@ -3,9 +3,16 @@ import { test, expect, Page } from "@playwright/test";
 const STORY_URL = "/iframe.html?id=workbench--full-workbench&viewMode=story";
 const SPLIT_URL = "/iframe.html?id=workbench--pre-split-layout&viewMode=story";
 const MANY_TABS_URL = "/iframe.html?id=workbench--many-tabs&viewMode=story";
+const CUSTOM_TABS_URL = "/iframe.html?id=workbench--custom-views-open-tabs&viewMode=story";
 
 async function waitForStory(page: Page) {
   await page.waitForSelector(".mosaic-workbench", { timeout: 10000 });
+}
+
+async function waitForVisualReady(page: Page) {
+  await waitForStory(page);
+  await page.waitForLoadState("networkidle");
+  await page.waitForFunction(() => !document.fonts || document.fonts.status === "loaded");
 }
 
 test.describe("Tab management", () => {
@@ -117,24 +124,14 @@ test.describe("Split editor", () => {
   });
 
   test("split button duplicates the active tab when only one tab is open", async ({ page }) => {
-    await page.goto(STORY_URL);
+    await page.goto(CUSTOM_TABS_URL);
     await waitForStory(page);
-
-    for (const tabId of [
-      "index.ts",
-      "workspace.diff",
-      "dashboard/src/components/AgentTraceViewer.tsx.diff",
-      "atif-gemini-cli-3.1-pro.trajectory.json",
-      "codex-cli-gpt-5.4-xhigh.raw.jsonl",
-    ]) {
-      await page.locator(`.mosaic-tab[data-tab-id="${tabId}"] .mosaic-tab-close`).click();
-    }
 
     await expect(page.locator(".mosaic-tab")).toHaveCount(1);
     await page.locator(".mosaic-tabbar-split-btn").click();
 
     await expect(page.locator(".mosaic-editor-group")).toHaveCount(2);
-    await expect(page.locator('.mosaic-tab[data-tab-id="App.tsx"]')).toHaveCount(2);
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveCount(2);
   });
 });
 
@@ -520,5 +517,49 @@ test.describe("Drag tab to split", () => {
     await expect(page.locator('.mosaic-tab[data-tab-id="FileTree.tsx"]')).toHaveCount(1);
     await expect(page.locator('.mosaic-tab[data-tab-id="FileTree.tsx"]')).toContainText("FileTree.tsx");
     await expect(page.locator('.mosaic-tab[data-tab-id="FileTree.tsx"]')).not.toContainText("Diff");
+  });
+});
+
+
+test.describe("Custom views", () => {
+  test("custom sidebar rows reuse tab ids and support drag-to-open", async ({ page }) => {
+    await page.goto(CUSTOM_TABS_URL);
+    await waitForStory(page);
+
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveCount(1);
+
+    await page.locator('[data-custom-item="run:crest-alpha"]').nth(1).click();
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveCount(1);
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveClass(/active/);
+
+    const source = page.locator('[data-custom-item="finding:mini-swe-agent-exit"]');
+    const target = page.locator('.mosaic-editor-content').first();
+    await source.dragTo(target);
+
+    await expect(page.locator('.mosaic-tab[data-tab-id="finding:mini-swe-agent-exit"]')).toHaveCount(1);
+  });
+});
+
+test.describe("Visual regression", () => {
+  test("flagship workbench stays visually stable", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto(STORY_URL);
+    await waitForVisualReady(page);
+    await expect(page).toHaveScreenshot('workbench-full-story.png', {
+      fullPage: true,
+      animations: 'disabled',
+      caret: 'hide',
+    });
+  });
+
+  test("custom tabs story stays visually stable", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto(CUSTOM_TABS_URL);
+    await waitForVisualReady(page);
+    await expect(page).toHaveScreenshot('workbench-custom-tabs-story.png', {
+      fullPage: true,
+      animations: 'disabled',
+      caret: 'hide',
+    });
   });
 });

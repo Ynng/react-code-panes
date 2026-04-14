@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactElement, ReactNode } from "react";
 
 // ─── Split Tree ──────────────────────────────────────────────
 
@@ -25,7 +25,12 @@ export interface Tab {
   id: string;
   title: string;
   icon?: ReactNode;
-  content: ReactNode;
+  /**
+   * Mounted editor content for this tab.
+   * `id` is the reuse key: calling `activateOrOpenTab` with the same `id`
+   * re-activates this tab instead of opening a duplicate.
+   */
+  content: ReactElement;
   isDirty?: boolean;
   isPinned?: boolean;
   isPreview?: boolean;
@@ -112,3 +117,5 @@ export interface GroupDragData {
 export type DragData = TabDragData | GroupDragData | SidebarFileDragData;
 
 export const DRAG_TYPE = "application/x-react-code-panes";
+
+export type TabFactory<T> = (item: T) => Tab;

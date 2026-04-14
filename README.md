@@ -17,9 +17,9 @@ The package is framework-agnostic on the React side and ships plain CSS for layo
 - Cross-container drag between sidebars, panel, and editor tabs
 - Built-in code review primitives: `CodeFileTree`, `ChangedFilesList`, `MonacoCodeViewer`, `MonacoDiffViewer`, `UnifiedDiffPreview`
 - Built-in agent trace support via `AgentTraceViewer` and `parseAgentTrace(...)`
-- Self-contained Material-style file and folder icons
+- Self-contained file and folder icons plus git-status colors
 - Dark and light themes via CSS custom properties
-- TypeScript types and a Storybook demo with Playwright coverage
+- TypeScript types and Storybook examples with Playwright coverage, including screenshot checks
 
 ## Install
 
@@ -37,97 +37,96 @@ import "react-code-panes/styles.css";
 
 The main thing to know: `Workbench` fills the size of its parent. In most apps you will embed it inside an existing layout region with a bounded height, not mount it fullscreen.
 
+The core mental model is simple:
+
+- your app renders whatever custom sidebar or panel UI it wants
+- that UI creates tabs with a stable `id`
+- `activateOrOpenTab(...)` reuses the existing tab when that `id` is already open
+
 ```tsx
 import "react-code-panes/styles.css";
-import { Workbench, createLeaf } from "react-code-panes";
-import type { PanelTab, SidebarSection, Tab } from "react-code-panes";
+import {
+  Workbench,
+  createLeaf,
+  useActiveWorkbenchGroupId,
+  useWorkbenchActions,
+} from "react-code-panes";
+import type { SidebarSection, Tab, TabFactory } from "react-code-panes";
 
-function CodeFileView({ path, code }: { path: string; code: string }) {
-  return (
-    <div style={{ padding: 16, fontFamily: "monospace", whiteSpace: "pre", overflow: "auto", height: "100%" }}>
-      <div style={{ opacity: 0.6, marginBottom: 12 }}>{path}</div>
-      {code}
+type ReviewItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  summary: string;
+  accent: string;
+};
+
+const reviewItems: ReviewItem[] = [
+  {
+    id: "run:crest-alpha",
+    title: "Crest alpha rollout",
+    subtitle: "132 / 226 PASS_LEGITIMATE",
+    summary: "Strongest local result from the April 10 runs.",
+    accent: "#4ec9b0",
+  },
+  {
+    id: "finding:exit-sentinel",
+    title: "mini-swe-agent exit sentinel",
+    subtitle: "Prompt contract mismatch",
+    summary: "The harness prompt clobbered the agent's native completion sentinel.",
+    accent: "#f2cc60",
+  },
+];
+
+const makeReviewTab: TabFactory<ReviewItem> = (item) => ({
+  id: item.id,
+  title: item.title,
+  labelColor: item.accent,
+  content: (
+    <div style={{ padding: 20, display: "grid", gap: 12 }}>
+      <div style={{ fontSize: 24, fontWeight: 600 }}>{item.title}</div>
+      <div style={{ color: "#9da5b4" }}>{item.subtitle}</div>
+      <div style={{ lineHeight: 1.7 }}>{item.summary}</div>
     </div>
-  );
-}
+  ),
+});
 
-function JsonView({ value }: { value: unknown }) {
-  return (
-    <pre style={{ margin: 0, padding: 16, overflow: "auto", height: "100%" }}>
-      {JSON.stringify(value, null, 2)}
-    </pre>
-  );
-}
+function ReviewQueue() {
+  const actions = useWorkbenchActions();
+  const activeGroupId = useActiveWorkbenchGroupId();
 
-function TrajectoryView({ steps }: { steps: Array<{ title: string; detail: string }> }) {
   return (
-    <div style={{ padding: 16, display: "grid", gap: 12 }}>
-      {steps.map((step, index) => (
-        <div key={index} style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: 12 }}>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>{step.title}</div>
-          <div style={{ opacity: 0.8 }}>{step.detail}</div>
-        </div>
+    <div style={{ padding: 8, display: "grid", gap: 6 }}>
+      {reviewItems.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => {
+            if (!activeGroupId) return;
+            actions.activateOrOpenTab(activeGroupId, makeReviewTab(item));
+          }}
+          style={{
+            textAlign: "left",
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.025)",
+            color: "inherit",
+            padding: 10,
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ fontWeight: 600 }}>{item.title}</div>
+          <div style={{ fontSize: 12, color: "#8b949e", marginTop: 4 }}>{item.subtitle}</div>
+        </button>
       ))}
     </div>
   );
 }
 
-const files: Array<{ id: string; title: string; code: string }> = [
-  {
-    id: "app.tsx",
-    title: "app.tsx",
-    code: "export function App() {\n  return <main>Review dashboard</main>;\n}\n",
-  },
-  {
-    id: "evaluator.json",
-    title: "evaluator.json",
-    code: '{\n  "status": "pass",\n  "score": 0.92\n}\n',
-  },
-];
-
-function makeFileTab(file: (typeof files)[number]): Tab {
-  return {
-    id: file.id,
-    title: file.title,
-    content: <CodeFileView path={file.title} code={file.code} />,
-  };
-}
-
 const leftSidebarSections: SidebarSection[] = [
   {
-    id: "files",
-    title: "Files",
-    defaultHeight: 280,
-    content: (
-      <div style={{ padding: 8 }}>
-        {files.map((file) => (
-          <div key={file.id} style={{ padding: "6px 10px" }}>
-            {file.title}
-          </div>
-        ))}
-      </div>
-    ),
-  },
-];
-
-const panelTabs: PanelTab[] = [
-  {
-    id: "trajectory",
-    title: "Trajectory",
-    content: (
-      <TrajectoryView
-        steps={[
-          { title: "Inspect diff", detail: "Agent opened the patch and looked for the regression." },
-          { title: "Run tests", detail: "It reproduced the failing evaluator path before making changes." },
-          { title: "Patch", detail: "It fixed the exit behavior and reran validation." },
-        ]}
-      />
-    ),
-  },
-  {
-    id: "metadata",
-    title: "Metadata",
-    content: <JsonView value={{ taskId: "example__task-1", verdict: "pass", runtimeSec: 84 }} />,
+    id: "queue",
+    title: "Queue",
+    content: <ReviewQueue />,
   },
 ];
 
@@ -140,9 +139,9 @@ export function ReviewWorkbench() {
           splitTree: createLeaf("main"),
           groups: {
             main: {
-              tabs: [makeFileTab(files[0]), makeFileTab(files[1])],
-              activeTabId: files[0].id,
-              mruOrder: files.map((file) => file.id),
+              tabs: [makeReviewTab(reviewItems[0])],
+              activeTabId: reviewItems[0].id,
+              mruOrder: [reviewItems[0].id],
             },
           },
           activeGroupId: "main",
@@ -150,18 +149,46 @@ export function ReviewWorkbench() {
         leftSidebar={{
           title: "Explorer",
           sections: leftSidebarSections,
-          defaultWidth: 260,
-          minWidth: 180,
-        }}
-        panel={{
-          tabs: panelTabs,
-          defaultHeight: 200,
-          minHeight: 96,
+          defaultWidth: 280,
+          minWidth: 200,
         }}
       />
     </section>
   );
 }
+```
+
+## Tab Identity And Lifecycle
+
+`react-code-panes` is intentionally React-first.
+
+- A tab is just metadata plus mounted React content.
+- `id` is the logical identity for that tab.
+- Calling `activateOrOpenTab(groupId, tab)` with an already-open `id` focuses the existing tab instead of opening a duplicate.
+- The existing tab is refreshed with the latest title, icon, color, and content you pass in.
+- Inactive editor tabs stay mounted while they remain open, so local component state can stay alive.
+- Explicit split actions are the exception: splitting a tab intentionally creates a second view of the current content in another editor group.
+
+The public `Tab` shape is:
+
+```ts
+interface Tab {
+  id: string;
+  title: string;
+  icon?: React.ReactNode;
+  content: React.ReactElement;
+  isDirty?: boolean;
+  isPinned?: boolean;
+  isPreview?: boolean;
+  closable?: boolean;
+  labelColor?: string;
+}
+```
+
+If you like the “tab factory” pattern, the package also exports:
+
+```ts
+type TabFactory<T> = (item: T) => Tab;
 ```
 
 ## Layout Pattern
@@ -185,23 +212,26 @@ Example:
 </div>
 ```
 
-## What Goes In Tabs
+## Custom Views Opening Custom Tabs
 
-Tabs and sidebar sections accept `ReactNode` content, so in practice you usually render your own components:
+The library does not require a file tree model.
 
-- code viewers
-- diff viewers
-- logs and terminal output
-- JSON inspectors
-- AI trajectory or trace views
-- screenshots or artifacts
-- custom forms and admin panels
+Your custom UI can be:
 
-The library handles pane layout, tabs, drag/drop, and resizing. Your app owns the actual content components.
+- a queue of runs
+- a trace list
+- a search results pane
+- a timeline
+- a notebook outline
+- a totally fake tree or flat list
+
+As long as that UI can turn an item into a `Tab`, it can drive the workbench.
+
+Storybook includes a dedicated `Workbench / Custom Views Open Tabs` example showing plain React sidebar rows opening and dragging custom tabs without using `CodeFileTree` or `ChangedFilesList`.
 
 ## Built-in Review Components
 
-If you want a stronger default out of the box, the package now exports a small review-oriented component set:
+If you want a stronger default out of the box, the package exports a small review-oriented component set:
 
 - `CodeFileTree` for nested explorer trees with file icons, status badges, and optional drag-to-tab behavior
 - `ChangedFilesList` for compact changed-file sidebars
@@ -256,71 +286,12 @@ Key props:
 - `showToolbar`: show or hide the toolbar
 - `theme`: `"dark"` or `"light"`
 
+### Hooks
+
+- `useWorkbench()` for direct access to state and dispatch
+- `useWorkbenchActions()` for tab and layout actions
+- `useActiveWorkbenchGroupId()` for the current target group when your custom UI wants to open tabs
+
 ### Lower-level components
 
-`SplitPane`, `TabBar`, `EditorGroup`, `Sidebar`, `Panel`, `ActivityBar`, `Sash`, and `DropOverlay` are also exported.
-
-- `EditorGroup` and `SplitPane` require `WorkbenchProvider` context.
-- `Sidebar`, `Panel`, `ActivityBar`, and `TabBar` are useful for more custom compositions.
-
-## Hooks
-
-### `useWorkbench()`
-
-Returns `{ state, dispatch }`.
-
-### `useWorkbenchActions()`
-
-Returns action helpers including:
-
-- `openTab`
-- `closeTab`
-- `setActiveTab`
-- `setActiveGroup`
-- `moveTab`
-- `updateSizes`
-- `reorderTab`
-- `activateOrOpenTab`
-- `pinTab`
-- `unpinTab`
-- `confirmTab`
-- `setTabDirty`
-- `dispatch`
-
-## Custom Drag Sources
-
-To make custom sidebar items draggable into the editor area:
-
-```tsx
-import { DRAG_TYPE, setDragTab } from "react-code-panes";
-
-function DraggableItem({ tab }: { tab: any }) {
-  return (
-    <div
-      draggable
-      onDragStart={(e) => {
-        setDragTab(tab);
-        e.dataTransfer.setData(
-          DRAG_TYPE,
-          JSON.stringify({ type: "sidebar-file", tabId: tab.id })
-        );
-      }}
-    >
-      {tab.title}
-    </div>
-  );
-}
-```
-
-## Local Development
-
-```bash
-npm run build
-npm run storybook
-npm run build-storybook
-npm run test:e2e
-```
-
-## License
-
-MIT
+The package also exports `TabBar`, `EditorGroup`, `Sidebar`, `Panel`, and split-tree utilities (`createLeaf`, `createBranch`) for advanced or custom setups.

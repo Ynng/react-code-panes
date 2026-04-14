@@ -11,6 +11,7 @@ import {
   FileIcon,
   getStatusColor,
   getStatusLetter,
+  DRAG_TYPE,
   MonacoCodeViewer,
   MonacoDiffViewer,
   PanelTab,
@@ -19,11 +20,14 @@ import {
   UnifiedDiffPreview,
   Workbench,
   WorkbenchState,
+  TabFactory,
   createBranch,
   createLeaf,
   useWorkbench,
+  useActiveWorkbenchGroupId,
   useWorkbenchActions,
 } from "../index";
+import { clearDragTab, setDragTab } from "../utils/dragStore";
 import {
   exampleDiffFiles,
   exampleFileTree,
@@ -526,6 +530,266 @@ function OutputPanel() {
   );
 }
 
+
+type CustomWorkspaceItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  kind: "run" | "finding" | "artifact";
+  accent: string;
+  stage: string;
+  summary: string;
+};
+
+const customQueueItems: CustomWorkspaceItem[] = [
+  {
+    id: "run:crest-alpha",
+    title: "Crest alpha rollout",
+    subtitle: "132 / 226 PASS_LEGITIMATE · crest-alpha · run_20260410_213249_94mcl2",
+    kind: "run",
+    accent: "#4ec9b0",
+    stage: "Ready to review",
+    summary: "High-confidence run with the strongest April 10 result. Good default entrypoint for dashboard QA.",
+  },
+  {
+    id: "finding:mini-swe-agent-exit",
+    title: "mini-swe-agent exit sentinel",
+    subtitle: "Prompt contract mismatch · harness regression",
+    kind: "finding",
+    accent: "#f2cc60",
+    stage: "Needs follow-up",
+    summary: "The harness forced every response to include a bash call, which clobbered the native completion sentinel path.",
+  },
+  {
+    id: "artifact:k3-smoke",
+    title: "K3 smoke-check artifact",
+    subtitle: "April 11 sanity run · mini-swe-agent + Claude 4.6",
+    kind: "artifact",
+    accent: "#75beff",
+    stage: "Reference",
+    summary: "A compact verification artifact for the post-fix exit-path sanity pass.",
+  },
+];
+
+const customPinnedItems: CustomWorkspaceItem[] = [
+  customQueueItems[0],
+  {
+    id: "finding:adaptive-thinking",
+    title: "Claude 4.6 adaptive thinking note",
+    subtitle: "Benchmark interpretation · reasoning mode clarification",
+    kind: "finding",
+    accent: "#c586c0",
+    stage: "Pinned context",
+    summary: "Benchmark runs already used adaptive thinking for Claude 4.6; the real comparison gap is high vs max effort.",
+  },
+];
+
+function CustomWorkspaceIcon({ kind }: { kind: CustomWorkspaceItem["kind"] }) {
+  if (kind === "run") {
+    return <span className="codicon codicon-play-circle" style={{ fontSize: 14 }} aria-hidden="true" />;
+  }
+  if (kind === "artifact") {
+    return <span className="codicon codicon-package" style={{ fontSize: 14 }} aria-hidden="true" />;
+  }
+  return <span className="codicon codicon-warning" style={{ fontSize: 14 }} aria-hidden="true" />;
+}
+
+function CustomWorkspaceTabContent({ item }: { item: CustomWorkspaceItem }) {
+  return (
+    <div
+      style={{
+        height: "100%",
+        overflow: "auto",
+        background: "var(--mosaic-editor-bg)",
+        color: "var(--mosaic-fg)",
+      }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gap: 18,
+          padding: 20,
+          maxWidth: 920,
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            padding: 18,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                background: item.accent,
+                boxShadow: `0 0 0 3px color-mix(in srgb, ${item.accent} 18%, transparent)`,
+              }}
+            />
+            <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b949e" }}>
+              {item.stage}
+            </div>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 600 }}>{item.title}</div>
+          <div style={{ fontSize: 13, color: "#9da5b4", lineHeight: 1.6 }}>{item.subtitle}</div>
+          <div style={{ fontSize: 14, lineHeight: 1.7, color: "#d4d4d4" }}>{item.summary}</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
+          {[
+            ["Open semantics", "Same item id reuses the existing tab instead of opening a duplicate."],
+            ["Custom UI", "This sidebar is plain React buttons, not a file tree or preset component."],
+            ["Drag support", "These rows can also be dragged into editor groups using the exported drag helpers."],
+          ].map(([label, value]) => (
+            <div
+              key={label}
+              style={{
+                padding: 14,
+                border: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(255,255,255,0.015)",
+                display: "grid",
+                gap: 6,
+              }}
+            >
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b949e" }}>{label}</div>
+              <div style={{ fontSize: 13, lineHeight: 1.6 }}>{value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const makeCustomWorkspaceTab: TabFactory<CustomWorkspaceItem> = (item) => ({
+  id: item.id,
+  title: item.title,
+  icon: <CustomWorkspaceIcon kind={item.kind} />,
+  labelColor: item.accent,
+  content: <CustomWorkspaceTabContent item={item} />,
+});
+
+function CustomWorkspaceList({ title, items }: { title: string; items: CustomWorkspaceItem[] }) {
+  const { state } = useWorkbench();
+  const actions = useWorkbenchActions();
+  const activeGroupId = useActiveWorkbenchGroupId();
+  const activeTabId = findActiveTabId(state);
+
+  return (
+    <div style={{ padding: 8, display: "grid", gap: 6 }}>
+      <div style={{ padding: "2px 6px", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b949e" }}>
+        {title}
+      </div>
+      {items.map((item) => {
+        const isActive = item.id === activeTabId;
+        const tab = makeCustomWorkspaceTab(item);
+        return (
+          <button
+            key={`${title}-${item.id}`}
+            type="button"
+            draggable
+            data-custom-item={item.id}
+            onClick={() => {
+              if (!activeGroupId) return;
+              actions.activateOrOpenTab(activeGroupId, tab);
+            }}
+            onDragStart={(event) => {
+              setDragTab(tab);
+              event.dataTransfer.effectAllowed = "copy";
+              event.dataTransfer.setData(DRAG_TYPE, JSON.stringify({ type: "sidebar-file", tabId: tab.id }));
+            }}
+            onDragEnd={() => clearDragTab()}
+            style={{
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: isActive ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.025)",
+              color: "inherit",
+              padding: 10,
+              textAlign: "left",
+              display: "grid",
+              gap: 6,
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  background: item.accent,
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontSize: 13, fontWeight: 600, color: isActive ? "#ffffff" : "#d4d4d4" }}>{item.title}</span>
+            </div>
+            <span style={{ fontSize: 12, lineHeight: 1.5, color: "#8b949e" }}>{item.subtitle}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CustomViewsWorkbench() {
+  const initialState: Partial<WorkbenchState> = {
+    splitTree: createLeaf("custom-main"),
+    activeGroupId: "custom-main",
+    groups: {
+      "custom-main": {
+        tabs: [makeCustomWorkspaceTab(customQueueItems[0])],
+        activeTabId: customQueueItems[0].id,
+        mruOrder: [customQueueItems[0].id],
+      },
+    },
+  };
+
+  const leftSections: SidebarSection[] = [
+    {
+      id: "queue",
+      title: "Queue",
+      content: <CustomWorkspaceList title="Review queue" items={customQueueItems} />,
+      headerActions: <SectionActionLabel>plain React rows opening custom tabs</SectionActionLabel>,
+    },
+    {
+      id: "pinned",
+      title: "Pinned",
+      content: <CustomWorkspaceList title="Pinned context" items={customPinnedItems} />,
+      headerActions: <SectionActionLabel>same ids reactivate existing tabs</SectionActionLabel>,
+    },
+  ];
+
+  const panelTabs: PanelTab[] = [
+    {
+      id: "custom-notes",
+      title: "Notes",
+      content: (
+        <pre style={{ margin: 0, padding: 12, color: "#cbd5e1", fontSize: 12, lineHeight: 1.55, fontFamily: "var(--mosaic-font-family-mono)" }}>
+{`makeTab(item) => { id, title, icon, content }
+
+click: activateOrOpenTab(activeGroupId, makeTab(item))
+drag: setDragTab(makeTab(item))`}
+        </pre>
+      ),
+    },
+  ];
+
+  return (
+    <div style={stageStyle}>
+      <div style={frameStyle}>
+        <Workbench
+          initialState={initialState}
+          leftSidebar={{ sections: leftSections, defaultWidth: 320, minWidth: 220 }}
+          panel={{ tabs: panelTabs, defaultHeight: 144, minHeight: 96 }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchState> }) {
   const [sourceControlViewMode, setSourceControlViewMode] = useState<"list" | "tree">("list");
 
@@ -727,4 +991,8 @@ export const PreSplitLayout: Story = {
 
 export const ManyTabs: Story = {
   render: () => <ReviewWorkbench initialState={buildManyTabsState()} />,
+};
+
+export const CustomViewsOpenTabs: Story = {
+  render: () => <CustomViewsWorkbench />,
 };
