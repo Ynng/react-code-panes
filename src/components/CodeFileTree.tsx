@@ -1,6 +1,6 @@
 import { CSSProperties, ReactNode, useMemo, useState } from "react";
 import { DRAG_TYPE, Tab } from "../types";
-import { setDragTab } from "../utils/dragStore";
+import { scheduleClearDragTab, setDragTab } from "../utils/dragStore";
 import { FileIcon, FolderIcon, getStatusColor, getStatusLetter } from "./FileIcon";
 
 export interface CodeFileTreeItem {
@@ -25,6 +25,20 @@ interface CodeFileTreeProps {
 function basename(path: string) {
   const parts = path.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? path;
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d={open ? "M4 6l4 4 4-4" : "M6 4l4 4-4 4"}
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function collectDefaultExpanded(items: CodeFileTreeItem[], expanded: Set<string>) {
@@ -66,7 +80,7 @@ export function CodeFileTree({
       const isFolder = item.type === "folder";
       const isExpanded = expandedPaths.has(item.path);
       const isSelected = item.path === selectedPath;
-      const paddingLeft = 10 + depth * 14;
+      const paddingLeft = 8 + depth * 8;
 
       return (
         <div key={item.path}>
@@ -82,16 +96,21 @@ export function CodeFileTree({
               if (!tab) return;
               setDragTab(tab);
               event.dataTransfer.effectAllowed = "copy";
+              event.dataTransfer.setData("text/plain", tab.id);
               event.dataTransfer.setData(
                 DRAG_TYPE,
                 JSON.stringify({ type: "sidebar-file", tabId: tab.id }),
               );
             }}
+            onDragEnd={() => {
+              scheduleClearDragTab();
+            }}
             style={{
               display: "flex",
               alignItems: "center",
               gap: 6,
-              padding: `3px 10px 3px ${paddingLeft}px`,
+              height: 22,
+              padding: `0 10px 0 ${paddingLeft}px`,
               cursor: "pointer",
               userSelect: "none",
               background: isSelected ? "rgba(9, 71, 113, 0.55)" : "transparent",
@@ -101,14 +120,15 @@ export function CodeFileTree({
           >
             <span
               style={{
-                width: 10,
+                width: 16,
                 color: "#858585",
                 display: "inline-flex",
+                alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
               }}
             >
-              {isFolder ? (isExpanded ? "▼" : "▶") : ""}
+              {isFolder ? <Chevron open={isExpanded} /> : null}
             </span>
             {isFolder ? (
               <FolderIcon open={isExpanded} />

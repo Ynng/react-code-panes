@@ -2,6 +2,7 @@ import type { AgentTraceTurn } from "../types/agentTrace";
 import { parseAgentTrace } from "../utils/agentTrace";
 import type { ChangedFileItem, CodeFileTreeItem } from "../index";
 import claudeCodeTraceRaw from "./fixtures/claude-code-opus-4.6-max.raw.jsonl?raw";
+import atifGeminiTraceRaw from "./fixtures/atif-gemini-cli-3.1-pro.trajectory.json?raw";
 import codexTraceRaw from "./fixtures/codex-cli-gpt-5.4-xhigh.raw.jsonl?raw";
 import geminiTraceRaw from "./fixtures/gemini-cli-3.1-pro.raw.json?raw";
 import miniSweAgentTraceRaw from "./fixtures/mini-swe-agent-gpt-5.4.raw.json?raw";
@@ -508,6 +509,12 @@ export const exampleFileTree: CodeFileTreeItem[] = [
 
 const traceFixtureSamples = [
   {
+    id: "atif-gemini-cli-3.1-pro.trajectory.json",
+    title: "ATIF trajectory",
+    path: "rollouts/atif/atif-gemini-cli-3.1-pro.trajectory.json",
+    raw: atifGeminiTraceRaw,
+  },
+  {
     id: "codex-cli-gpt-5.4-xhigh.raw.jsonl",
     title: "Codex CLI",
     path: "rollouts/codex/codex-cli-gpt-5.4-xhigh.raw.jsonl",
@@ -549,6 +556,11 @@ export const traceFileTree: CodeFileTreeItem[] = [
     path: "rollouts",
     type: "folder",
     children: [
+      {
+        path: "rollouts/atif",
+        type: "folder",
+        children: [{ path: "rollouts/atif/atif-gemini-cli-3.1-pro.trajectory.json", type: "file" }],
+      },
       {
         path: "rollouts/codex",
         type: "folder",

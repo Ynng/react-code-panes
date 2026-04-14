@@ -275,15 +275,20 @@
 .mosaic-sidebar-section-content {
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
 }
 
 .mosaic-sidebar-section-content::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
+  height: 10px;
+  background: transparent;
 }
 
 .mosaic-sidebar-section-content::-webkit-scrollbar-thumb {
   background: var(--mosaic-scrollbar-thumb);
-  border-radius: 3px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
 }
 
 /* ─── Split Pane / Sash ─────────────────────────────────── */
@@ -387,15 +392,19 @@
   align-items: stretch;
   flex: 1;
   min-width: 0;
+  height: calc(100% + 6px);
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: none;
-  scrollbar-color: transparent transparent;
-  padding-bottom: 1px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mosaic-scrollbar-thumb) transparent;
+  padding-bottom: 6px;
+  margin-bottom: -6px;
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar {
-  height: 0;
+  width: 10px;
+  height: 6px;
+  background: transparent;
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar-track {
@@ -403,11 +412,16 @@
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: var(--mosaic-scrollbar-thumb);
+  border: 1px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar-thumb:hover {
-  background: transparent;
+  background: var(--mosaic-scrollbar-thumb-hover);
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
 .mosaic-tabbar-actions {
@@ -584,10 +598,14 @@
 .mosaic-editor-content::-webkit-scrollbar {
   width: 10px;
   height: 10px;
+  background: transparent;
 }
 
 .mosaic-editor-content::-webkit-scrollbar-thumb {
   background: var(--mosaic-scrollbar-thumb);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
 }
 
 .mosaic-editor-content::-webkit-scrollbar-thumb:hover {
@@ -759,8 +777,12 @@
 .mosaic-panel-content::-webkit-scrollbar {
   width: 10px;
   height: 10px;
+  background: transparent;
 }
 
 .mosaic-panel-content::-webkit-scrollbar-thumb {
   background: var(--mosaic-scrollbar-thumb);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
 }

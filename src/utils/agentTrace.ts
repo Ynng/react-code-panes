@@ -27,8 +27,11 @@ type RawEvent = {
 
 type OpenCodeEvent = {
   type: string;
+  timestamp?: number;
+  sessionID?: string;
   part?: {
     text?: string;
+    error?: string;
     tool?: string;
     callID?: string;
     state?: {
@@ -305,16 +308,31 @@ function parseCodexRaw(lines: string[]): AgentTraceTurn[] {
 function parseOpenCodeRaw(events: OpenCodeEvent[]): AgentTraceTurn[] {
   const turns: AgentTraceTurn[] = [];
   let nextId = 1;
+  let currentTextParts: string[] = [];
   let currentToolCalls: AgentTraceToolCall[] = [];
   let currentToolResults: AgentTraceToolResult[] = [];
 
   function flushStep() {
-    if (currentToolCalls.length > 0) {
-      turns.push({ id: nextId++, type: "assistant", toolCalls: [...currentToolCalls] });
-      if (currentToolResults.length > 0) {
-        turns.push({ id: nextId++, type: "tool_result", toolResults: [...currentToolResults] });
-      }
+    if (
+      currentTextParts.length === 0 &&
+      currentToolCalls.length === 0 &&
+      currentToolResults.length === 0
+    ) {
+      return;
     }
+
+    turns.push({
+      id: nextId++,
+      type: "assistant",
+      text: currentTextParts.length > 0 ? currentTextParts.join("\n\n") : undefined,
+      toolCalls: currentToolCalls.length > 0 ? [...currentToolCalls] : undefined,
+    });
+
+    if (currentToolResults.length > 0) {
+      turns.push({ id: nextId++, type: "tool_result", toolResults: [...currentToolResults] });
+    }
+
+    currentTextParts = [];
     currentToolCalls = [];
     currentToolResults = [];
   }
@@ -336,8 +354,19 @@ function parseOpenCodeRaw(events: OpenCodeEvent[]): AgentTraceTurn[] {
         content: ev.part.state?.output ?? ev.part.state?.metadata?.output ?? "",
       });
     } else if (ev.type === "text" && ev.part?.text) {
+      currentTextParts.push(ev.part.text);
+    } else if (ev.type === "error" && ev.part) {
+      const errorText =
+        typeof ev.part.error === "string"
+          ? ev.part.error
+          : typeof ev.part.text === "string"
+            ? ev.part.text
+            : "";
+      if (errorText.trim()) {
+        currentTextParts.push(`[error] ${errorText}`);
+      }
+    } else if (ev.type === "step_finish") {
       flushStep();
-      turns.push({ id: nextId++, type: "assistant", text: ev.part.text });
     }
   }
 

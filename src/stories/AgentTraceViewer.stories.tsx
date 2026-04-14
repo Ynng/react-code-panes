@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import {
   AgentTraceViewer,
   CodeFileTree,
-  EditorBreadcrumb,
   FileIcon,
   PanelTab,
   SidebarSection,
@@ -45,11 +44,7 @@ function createTraceTab(id: string): Tab {
     id: sample.id,
     title: sample.id,
     icon: <FileIcon filename={sample.id} />,
-    content: (
-      <EditorBreadcrumb filePath={sample.path}>
-        <AgentTraceViewer turns={sample.turns} label={sample.title} />
-      </EditorBreadcrumb>
-    ),
+    content: <AgentTraceViewer turns={sample.turns} label={sample.title} />,
   };
 }
 
@@ -92,7 +87,7 @@ function SummaryPanel() {
       }}
     >
 {`{
-  "fixtures": 5,
+  "fixtures": 6,
   "source": "swe-bench-ultra rollout slices",
   "formats": ["codex", "claude", "gemini", "opencode", "mini-swe-agent"]
 }`}
@@ -118,7 +113,7 @@ const initialState: Partial<WorkbenchState> = {
   groups: {
     "group-main": {
       tabs: traceSamples.map((sample) => createTraceTab(sample.id)),
-      activeTabId: "codex-cli-gpt-5.4-xhigh.raw.jsonl",
+      activeTabId: "atif-gemini-cli-3.1-pro.trajectory.json",
       mruOrder: traceSamples.map((sample) => sample.id),
     },
   },

@@ -40,6 +40,7 @@ export type Action =
   | { type: "UNPIN_TAB"; groupId: string; tabId: string }
   | { type: "CONFIRM_TAB"; groupId: string; tabId: string }
   | { type: "REORDER_TAB"; groupId: string; tabId: string; toIndex: number }
+  | { type: "SPLIT_GROUP_WITH_TAB"; groupId: string; tabId: string; position: DropPosition }
   | { type: "SET_TREE"; tree: SplitNode; groups?: Record<string, EditorGroupState> };
 
 function createEmptyGroup(): EditorGroupState {
@@ -286,7 +287,12 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
         action.sourceGroupId === action.targetGroupId &&
         sourceGroup.tabs.length <= 1
       ) {
-        return state;
+        return reducer(state, {
+          type: "SPLIT_GROUP_WITH_TAB",
+          groupId: action.targetGroupId,
+          tabId: action.tabId,
+          position: action.position,
+        });
       }
 
       const newGroupId = generateGroupId();
@@ -454,6 +460,31 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
       };
     }
 
+    case "SPLIT_GROUP_WITH_TAB": {
+      const group = state.groups[action.groupId];
+      if (!group) return state;
+      const tab = group.tabs.find((candidate) => candidate.id === action.tabId);
+      if (!tab) return state;
+
+      const newGroupId = generateGroupId();
+      const newTree = simplifyTree(
+        splitLeaf(state.splitTree, action.groupId, newGroupId, action.position)
+      );
+
+      return {
+        splitTree: newTree,
+        groups: {
+          ...state.groups,
+          [newGroupId]: {
+            tabs: [tab],
+            activeTabId: tab.id,
+            mruOrder: [tab.id],
+          },
+        },
+        activeGroupId: newGroupId,
+      };
+    }
+
     case "SET_TREE":
       return {
         ...state,
@@ -559,6 +590,11 @@ export function useWorkbenchActions() {
     reorderTab: useCallback(
       (groupId: string, tabId: string, toIndex: number) =>
         dispatch({ type: "REORDER_TAB", groupId, tabId, toIndex }),
+      [dispatch]
+    ),
+    splitGroupWithTab: useCallback(
+      (groupId: string, tabId: string, position: DropPosition) =>
+        dispatch({ type: "SPLIT_GROUP_WITH_TAB", groupId, tabId, position }),
       [dispatch]
     ),
     activateOrOpenTab: useCallback(

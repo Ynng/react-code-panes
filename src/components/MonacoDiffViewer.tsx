@@ -1,9 +1,11 @@
 import { DiffEditor, type DiffEditorProps } from "@monaco-editor/react";
+import { resolveMonacoLanguage, withMonacoModelSuffix } from "../utils/monacoLanguage";
 
 interface MonacoDiffViewerProps {
   original: string;
   modified: string;
   language: string;
+  path?: string;
   height?: string | number;
   options?: DiffEditorProps["options"];
 }
@@ -12,15 +14,20 @@ export function MonacoDiffViewer({
   original,
   modified,
   language,
+  path,
   height = "100%",
   options,
 }: MonacoDiffViewerProps) {
+  const monacoLanguage = resolveMonacoLanguage(language, path);
+
   return (
     <DiffEditor
       height={height}
-      language={language}
+      language={monacoLanguage}
       original={original}
       modified={modified}
+      originalModelPath={path ? withMonacoModelSuffix(path, "original") : undefined}
+      modifiedModelPath={path ? withMonacoModelSuffix(path, "modified") : undefined}
       theme="vs-dark"
       onMount={(editor) => {
         if (typeof (editor as { revealFirstDiff?: () => void }).revealFirstDiff === "function") {

@@ -581,23 +581,38 @@ export function AgentTraceViewer({ turns, batch, label }: AgentTraceViewerProps)
   return (
     <HighlighterContext.Provider value={highlighter}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "var(--mosaic-font-family)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, fontSize: 11, color: "#6e6e6e", background: "#252526", borderBottom: "1px solid #3c3c3c", padding: "4px 16px", height: 26 }}>
-          {heading && <span style={{ color: "#cccccc", fontWeight: 500 }}>{heading}</span>}
-          {heading && <span style={{ color: "#3c3c3c" }}>|</span>}
-          <span>{steps.length} steps</span>
-          <span>{totalToolCalls} tool calls</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-            {steps.length > 10 && (
-              <>
-                <button onClick={() => scrollToStep(0)} style={{ background: "none", border: "none", color: "#6e6e6e", cursor: "pointer", padding: "0 4px", fontFamily: "inherit", fontSize: "inherit" }}>Top</button>
-                <button onClick={() => scrollToStep(steps.length - 1)} style={{ background: "none", border: "none", color: "#6e6e6e", cursor: "pointer", padding: "0 4px", fontFamily: "inherit", fontSize: "inherit" }}>End</button>
-              </>
-            )}
-          </div>
-        </div>
-
         <div style={{ flex: 1, overflow: "auto" }} ref={scrollRef}>
           <div style={{ maxWidth: 950, margin: "0 auto", paddingBottom: "60vh" }}>
+            <div
+              style={{
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 16px 6px",
+                background: "linear-gradient(180deg, rgba(30,30,30,0.98) 0%, rgba(30,30,30,0.94) 72%, rgba(30,30,30,0) 100%)",
+                fontSize: 11,
+                color: "#8b949e",
+              }}
+            >
+              {heading && (
+                <span style={{ color: "#c9d1d9", fontWeight: 500 }}>
+                  {heading}
+                </span>
+              )}
+              <span>{steps.length} steps</span>
+              <span>{totalToolCalls} tool calls</span>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                {steps.length > 10 && (
+                  <>
+                    <button onClick={() => scrollToStep(0)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#8b949e", cursor: "pointer", padding: "2px 7px", borderRadius: 999, fontFamily: "inherit", fontSize: "inherit" }}>Top</button>
+                    <button onClick={() => scrollToStep(steps.length - 1)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#8b949e", cursor: "pointer", padding: "2px 7px", borderRadius: 999, fontFamily: "inherit", fontSize: "inherit" }}>End</button>
+                  </>
+                )}
+              </div>
+            </div>
             {preamble.map((turn) => <PreambleTurn key={turn.id} turn={turn} />)}
             {preamble.length > 0 && steps.length > 0 && <div style={{ height: 8 }} />}
             {steps.map((step) => <StepView key={step.index} step={step} />)}

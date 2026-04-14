@@ -27,7 +27,7 @@ test.describe("Flagship workbench viewers", () => {
     await page.locator('.mosaic-tab[data-tab-id="codex-cli-gpt-5.4-xhigh.raw.jsonl"]').click();
     const editorContent = page.locator(".mosaic-editor-content").first();
     await expect(editorContent.getByText("Codex CLI")).toBeVisible();
-    await expect(editorContent.getByText("tool calls")).toBeVisible();
+    await expect(editorContent.getByText("47 tool calls")).toBeVisible();
     await expect(editorContent.getByRole("button", { name: "Top" })).toBeVisible();
   });
 });
@@ -40,6 +40,7 @@ test.describe("Trace gallery", () => {
     });
 
     for (const [id, title] of [
+      ["atif-gemini-cli-3.1-pro.trajectory.json", "ATIF trajectory"],
       ["codex-cli-gpt-5.4-xhigh.raw.jsonl", "Codex CLI"],
       ["claude-code-opus-4.6-max.raw.jsonl", "Claude Code"],
       ["opencode-gemini-3.1-pro.raw.json", "OpenCode"],

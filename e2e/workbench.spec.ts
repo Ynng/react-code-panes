@@ -115,6 +115,27 @@ test.describe("Split editor", () => {
     // Should now have 2 editor groups
     await expect(page.locator(".mosaic-editor-group")).toHaveCount(2);
   });
+
+  test("split button duplicates the active tab when only one tab is open", async ({ page }) => {
+    await page.goto(STORY_URL);
+    await waitForStory(page);
+
+    for (const tabId of [
+      "index.ts",
+      "workspace.diff",
+      "dashboard/src/components/AgentTraceViewer.tsx.diff",
+      "atif-gemini-cli-3.1-pro.trajectory.json",
+      "codex-cli-gpt-5.4-xhigh.raw.jsonl",
+    ]) {
+      await page.locator(`.mosaic-tab[data-tab-id="${tabId}"] .mosaic-tab-close`).click();
+    }
+
+    await expect(page.locator(".mosaic-tab")).toHaveCount(1);
+    await page.locator(".mosaic-tabbar-split-btn").click();
+
+    await expect(page.locator(".mosaic-editor-group")).toHaveCount(2);
+    await expect(page.locator('.mosaic-tab[data-tab-id="App.tsx"]')).toHaveCount(2);
+  });
 });
 
 test.describe("Sidebar toggle", () => {
@@ -446,5 +467,16 @@ test.describe("Drag tab to split", () => {
 
     // Should now have 2 editor groups
     await expect(page.locator(".mosaic-editor-group")).toHaveCount(2);
+  });
+
+  test("dragging a file from the explorer opens it in the editor", async ({ page }) => {
+    await page.goto(STORY_URL);
+    await waitForStory(page);
+
+    const source = page.locator('[title="eval/runner/server.py"]').first().locator("..");
+    const target = page.locator(".mosaic-editor-content").first();
+    await source.dragTo(target);
+
+    await expect(page.locator('.mosaic-tab[data-tab-id="server.py"]')).toHaveCount(1);
   });
 });

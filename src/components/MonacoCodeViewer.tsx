@@ -1,4 +1,5 @@
 import Editor, { type EditorProps } from "@monaco-editor/react";
+import { resolveMonacoLanguage } from "../utils/monacoLanguage";
 
 interface MonacoCodeViewerProps {
   value: string;
@@ -15,12 +16,14 @@ export function MonacoCodeViewer({
   height = "100%",
   options,
 }: MonacoCodeViewerProps) {
+  const monacoLanguage = resolveMonacoLanguage(language, path);
+
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <Editor
         height={height}
         path={path}
-        language={language}
+        language={monacoLanguage}
         value={value}
         theme="vs-dark"
         options={{

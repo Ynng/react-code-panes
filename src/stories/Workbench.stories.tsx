@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { CSSProperties, ReactNode } from "react";
+import { CSSProperties, ReactNode, useMemo, useState } from "react";
 import type { ActivityBarItem } from "../components/ActivityBar";
 import {
   AgentTraceViewer,
   ChangedFilesList,
   CodeFileTree,
+  CodeFileTreeItem,
   EditorBreadcrumb,
   FileIcon,
   MonacoCodeViewer,
@@ -112,6 +113,70 @@ function SectionActionLabel({ children }: { children: ReactNode }) {
   );
 }
 
+function TreeViewIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2.75 3.25H7.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M2.75 8H5.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M2.75 12.75H5.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M8.5 3.25H12.5V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.75 8H11.25V12.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.75 12.75H12.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <circle cx="12.75" cy="7.75" r=".9" fill="currentColor" />
+      <circle cx="12.75" cy="12.75" r=".9" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ListViewIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="3" cy="4" r=".9" fill="currentColor" />
+      <circle cx="3" cy="8" r=".9" fill="currentColor" />
+      <circle cx="3" cy="12" r=".9" fill="currentColor" />
+      <path d="M5.25 4H13.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M5.25 8H13.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M5.25 12H13.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function HeaderIconButton({
+  active,
+  title,
+  onClick,
+  children,
+}: {
+  active?: boolean;
+  title: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      style={{
+        width: 22,
+        height: 22,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "none",
+        borderRadius: 3,
+        background: active ? "rgba(255, 255, 255, 0.1)" : "transparent",
+        color: active ? "var(--mosaic-sidebar-fg)" : "var(--mosaic-sidebar-header-fg)",
+        cursor: "pointer",
+        padding: 0,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function createCodeTab(fileId: string): Tab {
   const file = getExampleFileById(fileId);
   if (!file) {
@@ -170,6 +235,7 @@ function createDiffFileTab(path: string): Tab {
           original={diffFile.original}
           modified={diffFile.modified}
           language={diffFile.language}
+          path={path}
         />
       </EditorBreadcrumb>
     ),
@@ -190,11 +256,7 @@ function createTraceTab(id: string): Tab {
     id: sample.id,
     title: sample.id,
     icon: <FileIcon filename={sample.id} />,
-    content: (
-      <EditorBreadcrumb filePath={sample.path}>
-        <AgentTraceViewer turns={sample.turns} label={sample.title} />
-      </EditorBreadcrumb>
-    ),
+    content: <AgentTraceViewer turns={sample.turns} label={sample.title} />,
   };
 }
 
@@ -245,22 +307,99 @@ function ExplorerSection() {
   );
 }
 
-function SourceControlSection() {
+function SourceControlSection({ viewMode }: { viewMode: "list" | "tree" }) {
   const { state } = useWorkbench();
   const actions = useWorkbenchActions();
   const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
   const activeTabId = findActiveTabId(state);
   const selectedPath = activeTabId?.endsWith(".diff") ? activeTabId.slice(0, -5) : null;
 
+  const treeItems = useMemo(() => {
+    type Node = CodeFileTreeItem & { childrenMap?: Map<string, Node> };
+    const roots = new Map<string, Node>();
+
+    function upsert(map: Map<string, Node>, path: string, type: "folder" | "file"): Node {
+      const existing = map.get(path);
+      if (existing) return existing;
+      const node: Node = {
+        path,
+        type,
+        children: type === "folder" ? [] : undefined,
+        childrenMap: type === "folder" ? new Map<string, Node>() : undefined,
+      };
+      map.set(path, node);
+      return node;
+    }
+
+    for (const file of exampleDiffFiles) {
+      const parts = file.path.split("/");
+      let currentMap = roots;
+      let currentPath = "";
+
+      parts.forEach((part, index) => {
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+        const isLeaf = index === parts.length - 1;
+        const node = upsert(currentMap, currentPath, isLeaf ? "file" : "folder");
+        if (isLeaf) {
+          node.status = file.status;
+          node.trailing = (
+            <span
+              style={{
+                fontSize: 11,
+                fontFamily: "var(--mosaic-font-family-mono)",
+                color: "#8b949e",
+                flexShrink: 0,
+              }}
+            >
+              {file.additions > 0 && <span style={{ color: "#4ec9b0" }}>+{file.additions}</span>}
+              {file.deletions > 0 && <span style={{ color: "#f14c4c", marginLeft: 4 }}>-{file.deletions}</span>}
+            </span>
+          );
+        } else if (node.childrenMap) {
+          currentMap = node.childrenMap;
+        }
+      });
+    }
+
+    function finalize(nodes: Map<string, Node>): CodeFileTreeItem[] {
+      return [...nodes.values()].map((node) => ({
+        path: node.path,
+        type: node.type,
+        status: node.status,
+        trailing: node.trailing,
+        children: node.childrenMap ? finalize(node.childrenMap) : undefined,
+      }));
+    }
+
+    return finalize(roots);
+  }, []);
+
   return (
-    <ChangedFilesList
-      files={exampleDiffFiles}
-      selectedPath={selectedPath}
-      onSelectFile={(file) => {
-        if (!activeGroupId) return;
-        actions.activateOrOpenTab(activeGroupId, createDiffFileTab(file.path));
-      }}
-    />
+    <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      {viewMode === "list" ? (
+        <ChangedFilesList
+          files={exampleDiffFiles}
+          selectedPath={selectedPath}
+          onSelectFile={(file) => {
+            if (!activeGroupId) return;
+            actions.activateOrOpenTab(activeGroupId, createDiffFileTab(file.path));
+          }}
+        />
+      ) : (
+        <CodeFileTree
+          items={treeItems}
+          selectedPath={selectedPath}
+          onOpenFile={(item) => {
+            if (item.type !== "file" || !activeGroupId) return;
+            actions.activateOrOpenTab(activeGroupId, createDiffFileTab(item.path));
+          }}
+          getDragTab={(item) => {
+            if (item.type !== "file") return null;
+            return createDiffFileTab(item.path);
+          }}
+        />
+      )}
+    </div>
   );
 }
 
@@ -374,7 +513,7 @@ function OutputPanel() {
 {`{
   "task_id": "kh73faxghpn90rtyxsrjmpjpsx83f4ws",
   "diff_files": 3,
-  "trace_files": 5,
+  "trace_files": 6,
   "default_trace": "codex-cli-gpt-5.4-xhigh.raw.jsonl"
 }`}
     </pre>
@@ -382,6 +521,8 @@ function OutputPanel() {
 }
 
 function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchState> }) {
+  const [sourceControlViewMode, setSourceControlViewMode] = useState<"list" | "tree">("list");
+
   const activityItems: ActivityBarItem[] = [
     { id: "explorer", title: "Explorer", icon: <ExplorerIcon /> },
     { id: "search", title: "Search", icon: <SearchIcon /> },
@@ -399,8 +540,25 @@ function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchStat
     {
       id: "source-control",
       title: "Source Control",
-      content: <SourceControlSection />,
-      headerActions: <SectionActionLabel>open Monaco diffs</SectionActionLabel>,
+      content: <SourceControlSection viewMode={sourceControlViewMode} />,
+      headerActions: (
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <HeaderIconButton
+            title="Tree View"
+            active={sourceControlViewMode === "tree"}
+            onClick={() => setSourceControlViewMode("tree")}
+          >
+            <TreeViewIcon />
+          </HeaderIconButton>
+          <HeaderIconButton
+            title="List View"
+            active={sourceControlViewMode === "list"}
+            onClick={() => setSourceControlViewMode("list")}
+          >
+            <ListViewIcon />
+          </HeaderIconButton>
+        </div>
+      ),
     },
   ];
 
@@ -450,6 +608,7 @@ function buildDefaultState(): Partial<WorkbenchState> {
           createCodeTab("index.ts"),
           createDiffOverviewTab(),
           createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx"),
+          createTraceTab("atif-gemini-cli-3.1-pro.trajectory.json"),
           createTraceTab("codex-cli-gpt-5.4-xhigh.raw.jsonl"),
         ],
         activeTabId: "App.tsx",
@@ -458,6 +617,7 @@ function buildDefaultState(): Partial<WorkbenchState> {
           "index.ts",
           "workspace.diff",
           "dashboard/src/components/AgentTraceViewer.tsx.diff",
+          "atif-gemini-cli-3.1-pro.trajectory.json",
           "codex-cli-gpt-5.4-xhigh.raw.jsonl",
         ],
       },
@@ -505,12 +665,14 @@ function buildSplitState(): Partial<WorkbenchState> {
       },
       "group-trace": {
         tabs: [
+          createTraceTab("atif-gemini-cli-3.1-pro.trajectory.json"),
           createTraceTab("codex-cli-gpt-5.4-xhigh.raw.jsonl"),
           createTraceTab("claude-code-opus-4.6-max.raw.jsonl"),
         ],
         activeTabId: "claude-code-opus-4.6-max.raw.jsonl",
         mruOrder: [
           "claude-code-opus-4.6-max.raw.jsonl",
+          "atif-gemini-cli-3.1-pro.trajectory.json",
           "codex-cli-gpt-5.4-xhigh.raw.jsonl",
         ],
       },

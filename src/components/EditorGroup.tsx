@@ -3,7 +3,7 @@ import { useWorkbench, useWorkbenchActions } from "../context/WorkbenchContext";
 import { TabBar } from "./TabBar";
 import { DropOverlay } from "./DropOverlay";
 import { DropPosition, DRAG_TYPE } from "../types";
-import { getDragTab } from "../utils/dragStore";
+import { clearDragTab, getDragTab } from "../utils/dragStore";
 
 interface EditorGroupProps {
   groupId: string;
@@ -21,6 +21,24 @@ function getDropPosition(e: React.DragEvent, rect: DOMRect): DropPosition {
   return "center";
 }
 
+function hasWorkbenchDragData(e: React.DragEvent) {
+  return e.dataTransfer.types.includes(DRAG_TYPE) || !!getDragTab();
+}
+
+function getDragPayload(e: React.DragEvent): { type: "tab" | "sidebar-file" } | null {
+  const raw = e.dataTransfer.getData(DRAG_TYPE);
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.type === "tab" || parsed?.type === "sidebar-file") return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  return getDragTab() ? { type: "sidebar-file" } : null;
+}
+
 export function EditorGroup({ groupId }: EditorGroupProps) {
   const { state } = useWorkbench();
   const actions = useWorkbenchActions();
@@ -32,15 +50,16 @@ export function EditorGroup({ groupId }: EditorGroupProps) {
   const activeTab = group?.tabs.find((t) => t.id === group.activeTabId);
 
   const handleContentDragOver = useCallback((e: React.DragEvent) => {
-    if (!e.dataTransfer.types.includes(DRAG_TYPE)) return;
+    if (!hasWorkbenchDragData(e)) return;
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+    const payload = getDragPayload(e);
+    e.dataTransfer.dropEffect = payload?.type === "sidebar-file" ? "copy" : "move";
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setDropPos(getDropPosition(e, rect));
   }, []);
 
   const handleContentDragEnter = useCallback((e: React.DragEvent) => {
-    if (!e.dataTransfer.types.includes(DRAG_TYPE)) return;
+    if (!hasWorkbenchDragData(e)) return;
     dragCounter.current++;
   }, []);
 
@@ -59,9 +78,15 @@ export function EditorGroup({ groupId }: EditorGroupProps) {
       setDropPos(null);
 
       const raw = e.dataTransfer.getData(DRAG_TYPE);
-      if (!raw) return;
-      let data: any;
-      try { data = JSON.parse(raw); } catch { return; }
+      let data: any = getDragPayload(e);
+      if (!data && raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          return;
+        }
+      }
+      if (!data) return;
 
       // Handle sidebar file drop — retrieve full Tab from drag store
       if (data.type === "sidebar-file") {
@@ -81,6 +106,7 @@ export function EditorGroup({ groupId }: EditorGroupProps) {
             position,
           });
         }
+        clearDragTab();
         return;
       }
 
@@ -115,6 +141,10 @@ export function EditorGroup({ groupId }: EditorGroupProps) {
 
   const handleSplitActive = useCallback(() => {
     if (!activeTab) return;
+    if ((group?.tabs.length ?? 0) <= 1) {
+      actions.splitGroupWithTab(groupId, activeTab.id, "right");
+      return;
+    }
     actions.dispatch({
       type: "SPLIT_AND_MOVE",
       targetGroupId: groupId,
@@ -122,7 +152,7 @@ export function EditorGroup({ groupId }: EditorGroupProps) {
       tabId: activeTab.id,
       position: "right",
     });
-  }, [groupId, activeTab, actions]);
+  }, [groupId, activeTab, actions, group?.tabs.length]);
 
   return (
     <div
@@ -145,10 +175,10 @@ export function EditorGroup({ groupId }: EditorGroupProps) {
       )}
       <div
         className="mosaic-editor-content"
-        onDragOver={handleContentDragOver}
-        onDragEnter={handleContentDragEnter}
-        onDragLeave={handleContentDragLeave}
-        onDrop={handleContentDrop}
+        onDragOverCapture={handleContentDragOver}
+        onDragEnterCapture={handleContentDragEnter}
+        onDragLeaveCapture={handleContentDragLeave}
+        onDropCapture={handleContentDrop}
       >
         {group && group.tabs.length > 0 ? (
           group.tabs.map((tab) => (
