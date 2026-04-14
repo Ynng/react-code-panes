@@ -17,7 +17,6 @@ import {
   WorkbenchState,
   createBranch,
   createLeaf,
-  parseAgentTrace,
   useWorkbench,
   useWorkbenchActions,
 } from "../index";
@@ -28,31 +27,35 @@ import {
   getExampleDiffFile,
   getExampleFileById,
   getExampleFileByPath,
+  getTraceSampleById,
+  getTraceSampleByPath,
+  traceFileTree,
   traceSamples,
   workspaceUnifiedDiff,
 } from "./exampleData";
 
-const frameStyle: CSSProperties = {
-  width: "min(1440px, calc(100vw - 48px))",
-  height: 860,
-  margin: "24px auto",
-  borderRadius: 18,
-  overflow: "hidden",
-  border: "1px solid rgba(148, 163, 184, 0.16)",
-  boxShadow: "0 30px 80px rgba(15, 23, 42, 0.3)",
-  background:
-    "radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 26%), #0f172a",
-  padding: 14,
+const stageStyle: CSSProperties = {
+  minHeight: "100vh",
+  padding: 16,
   boxSizing: "border-box",
+  background: "#111111",
 };
 
-const shellStyle: CSSProperties = {
-  width: "100%",
-  height: "100%",
-  borderRadius: 14,
+const frameStyle: CSSProperties = {
+  width: "min(1480px, calc(100vw - 32px))",
+  height: 860,
+  margin: "0 auto",
+  border: "1px solid #2d2d30",
+  borderRadius: 6,
   overflow: "hidden",
-  background: "#111827",
+  background: "#1e1e1e",
+  boxShadow: "0 22px 54px rgba(0, 0, 0, 0.34)",
 };
+
+function basename(path: string) {
+  const parts = path.split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? path;
+}
 
 function ExplorerIcon() {
   return (
@@ -101,7 +104,7 @@ function SectionActionLabel({ children }: { children: ReactNode }) {
         fontSize: 10,
         letterSpacing: "0.04em",
         textTransform: "uppercase",
-        color: "#6b7280",
+        color: "var(--mosaic-sidebar-header-fg)",
       }}
     >
       {children}
@@ -123,7 +126,6 @@ function createCodeTab(fileId: string): Tab {
     id: file.id,
     title: file.id,
     icon: <FileIcon filename={file.id} />,
-    labelColor: file.status ? "#e2c08d" : undefined,
     content: (
       <EditorBreadcrumb filePath={file.path}>
         <MonacoCodeViewer value={file.content} language={file.language} path={file.path} />
@@ -135,15 +137,19 @@ function createCodeTab(fileId: string): Tab {
 function createDiffOverviewTab(): Tab {
   return {
     id: "workspace.diff",
-    title: "workspace.diff",
-    icon: <FileIcon filename="workspace.diff" />,
-    content: <UnifiedDiffPreview diff={workspaceUnifiedDiff} />,
+    title: "changes.patch",
+    icon: <FileIcon filename="changes.patch" />,
+    content: (
+      <EditorBreadcrumb filePath="rollouts/source-control/changes.patch">
+        <UnifiedDiffPreview diff={workspaceUnifiedDiff} />
+      </EditorBreadcrumb>
+    ),
   };
 }
 
 function createDiffFileTab(path: string): Tab {
   const diffFile = getExampleDiffFile(path);
-  const title = `${path.split("/").pop() ?? path}.diff`;
+  const title = basename(path);
   if (!diffFile) {
     return {
       id: `${path}.diff`,
@@ -156,7 +162,7 @@ function createDiffFileTab(path: string): Tab {
   return {
     id: `${path}.diff`,
     title,
-    icon: <FileIcon filename={path.split("/").pop() ?? path} />,
+    icon: <FileIcon filename={title} />,
     labelColor: "#e2c08d",
     content: (
       <EditorBreadcrumb filePath={path}>
@@ -171,7 +177,7 @@ function createDiffFileTab(path: string): Tab {
 }
 
 function createTraceTab(id: string): Tab {
-  const sample = traceSamples.find((candidate) => candidate.id === id);
+  const sample = getTraceSampleById(id);
   if (!sample) {
     return {
       id,
@@ -185,10 +191,9 @@ function createTraceTab(id: string): Tab {
     title: sample.id,
     icon: <FileIcon filename={sample.id} />,
     content: (
-      <AgentTraceViewer
-        turns={parseAgentTrace(sample.raw)}
-        label={sample.title}
-      />
+      <EditorBreadcrumb filePath={sample.path}>
+        <AgentTraceViewer turns={sample.turns} label={sample.title} />
+      </EditorBreadcrumb>
     ),
   };
 }
@@ -197,9 +202,15 @@ const outlineByFileId: Record<string, string[]> = {
   "App.tsx": ["App()", "dashboard-shell", "dashboard-header", "RunSummary", "AgentTracePanel"],
   "index.ts": ["App", "RunSummary", "AgentTracePanel", "buildReviewTabs"],
   "RunSummary.tsx": ["rows", "RunSummary()", "summary-card", "summary-row"],
+  "AgentTraceViewer.tsx": ["Props", "AgentTraceViewer()", "TraceToolbar", "TraceRow"],
+  "FileTree.tsx": ["FileTree()", "file-tree-row", "file-tree-label", "file-tree-status"],
   "server.py": ["RunRequest", "launch_run(request)"],
-  "workbench.css": [".dashboard-shell", ".dashboard-header", ".dashboard-grid"],
-  "workspace.diff": ["AgentTraceViewer.tsx", "FileTree.tsx", "workbench.css"],
+  "workbench.css": [".trace-viewer", ".trace-toolbar", ".file-tree-row"],
+  "workspace.diff": [
+    "AgentTraceViewer.tsx",
+    "FileTree.tsx",
+    "workbench.css",
+  ],
 };
 
 function findActiveTabId(state: WorkbenchState) {
@@ -234,16 +245,12 @@ function ExplorerSection() {
   );
 }
 
-function DiffSection() {
+function SourceControlSection() {
   const { state } = useWorkbench();
   const actions = useWorkbenchActions();
   const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
   const activeTabId = findActiveTabId(state);
-  const selectedPath = activeTabId?.endsWith(".diff")
-    ? activeTabId.slice(0, -5)
-    : activeTabId === "workspace.diff"
-      ? "workspace.diff"
-      : null;
+  const selectedPath = activeTabId?.endsWith(".diff") ? activeTabId.slice(0, -5) : null;
 
   return (
     <ChangedFilesList
@@ -257,10 +264,44 @@ function DiffSection() {
   );
 }
 
+function TraceFilesSection() {
+  const { state } = useWorkbench();
+  const actions = useWorkbenchActions();
+  const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
+  const activeTabId = findActiveTabId(state);
+  const activeTracePath = activeTabId ? getTraceSampleById(activeTabId)?.path : null;
+
+  return (
+    <CodeFileTree
+      items={traceFileTree}
+      selectedPath={activeTracePath}
+      onOpenFile={(item) => {
+        if (item.type !== "file" || !activeGroupId) return;
+        const sample = getTraceSampleByPath(item.path);
+        if (!sample) return;
+        actions.activateOrOpenTab(activeGroupId, createTraceTab(sample.id));
+      }}
+      getDragTab={(item) => {
+        if (item.type !== "file") return null;
+        const sample = getTraceSampleByPath(item.path);
+        return sample ? createTraceTab(sample.id) : null;
+      }}
+    />
+  );
+}
+
 function OutlineSection() {
   const { state } = useWorkbench();
   const activeTabId = findActiveTabId(state) ?? "App.tsx";
-  const symbols = outlineByFileId[activeTabId] ?? ["No outline available"];
+  const activeTrace = getTraceSampleById(activeTabId);
+  const symbols = activeTrace
+    ? [
+        activeTrace.title,
+        `${activeTrace.turns.length} turns`,
+        `${activeTrace.turns.filter((turn) => turn.type === "assistant").length} assistant turns`,
+        `${activeTrace.turns.reduce((count, turn) => count + (turn.toolCalls?.length ?? 0), 0)} tool calls`,
+      ]
+    : outlineByFileId[activeTabId] ?? ["No outline available"];
 
   return (
     <div>
@@ -270,7 +311,7 @@ function OutlineSection() {
           style={{
             padding: "4px 10px",
             fontSize: 12,
-            color: "#cbd5e1",
+            color: "var(--mosaic-sidebar-fg)",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -283,52 +324,14 @@ function OutlineSection() {
   );
 }
 
-function TraceSection() {
-  const { state } = useWorkbench();
-  const actions = useWorkbenchActions();
-  const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
-
-  return (
-    <div style={{ display: "grid", gap: 6, padding: 8 }}>
-      {traceSamples.map((sample) => (
-        <button
-          key={sample.id}
-          onClick={() => {
-            if (!activeGroupId) return;
-            actions.activateOrOpenTab(activeGroupId, createTraceTab(sample.id));
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 10px",
-            background: "#111827",
-            border: "1px solid rgba(148, 163, 184, 0.14)",
-            color: "#e5e7eb",
-            borderRadius: 8,
-            cursor: "pointer",
-            textAlign: "left",
-            fontSize: 12,
-          }}
-        >
-          <FileIcon filename={sample.id} />
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {sample.title}
-          </span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function ProblemsPanel() {
   return (
     <div style={{ padding: 12, color: "#e5e7eb", fontSize: 12, display: "grid", gap: 8 }}>
       <div style={{ borderLeft: "3px solid #f59e0b", paddingLeft: 10 }}>
-        `CodeFileTree.tsx` uses a fixed row height that may clip long labels in narrow panes.
+        Separate the explorer tree from source control changes so regular files and diffs do not share state.
       </div>
       <div style={{ borderLeft: "3px solid #38bdf8", paddingLeft: 10 }}>
-        Consider memoizing parsed trace fixtures if you render many viewers on one page.
+        Trace fixtures are real rollout slices from `swe-bench-ultra`, so the viewer is exercised on longer transcripts.
       </div>
     </div>
   );
@@ -343,17 +346,15 @@ function TerminalPanel() {
         color: "#d1fae5",
         fontSize: 12,
         lineHeight: 1.55,
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        fontFamily: "var(--mosaic-font-family-mono)",
       }}
     >
 {`$ npm run test:e2e
 
-Running 23 tests using 4 workers
-  ✓ workbench: clicking a tab activates it
-  ✓ workbench: dragging a file into a split opens Monaco
-  ✓ trace gallery: all trace formats render
-
-23 passed (14.7s)`}
+Running viewer and workbench stories
+  ✓ source control opens Monaco diff editors
+  ✓ trace fixtures open as workbench tabs
+  ✓ long rollout-derived traces render across supported formats`}
     </pre>
   );
 }
@@ -367,15 +368,14 @@ function OutputPanel() {
         color: "#cbd5e1",
         fontSize: 12,
         lineHeight: 1.55,
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        fontFamily: "var(--mosaic-font-family-mono)",
       }}
     >
 {`{
-  "run_id": "run_20260410_213249_94mcl2",
-  "agent": "crest-alpha",
-  "pass_rate": 0.584,
-  "resolved": 132,
-  "total": 226
+  "task_id": "kh73faxghpn90rtyxsrjmpjpsx83f4ws",
+  "diff_files": 3,
+  "trace_files": 5,
+  "default_trace": "codex-cli-gpt-5.4-xhigh.raw.jsonl"
 }`}
     </pre>
   );
@@ -394,27 +394,27 @@ function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchStat
       id: "explorer",
       title: "Explorer",
       content: <ExplorerSection />,
-      headerActions: <SectionActionLabel>drag files into editors</SectionActionLabel>,
+      headerActions: <SectionActionLabel>drag files into editor groups</SectionActionLabel>,
     },
     {
-      id: "diff",
-      title: "Workspace Diff",
-      content: <DiffSection />,
-      headerActions: <SectionActionLabel>review changed files</SectionActionLabel>,
+      id: "source-control",
+      title: "Source Control",
+      content: <SourceControlSection />,
+      headerActions: <SectionActionLabel>open Monaco diffs</SectionActionLabel>,
     },
   ];
 
   const rightSections: SidebarSection[] = [
     {
+      id: "trace-files",
+      title: "Trace Files",
+      content: <TraceFilesSection />,
+      headerActions: <SectionActionLabel>real swe-bench fixtures</SectionActionLabel>,
+    },
+    {
       id: "outline",
       title: "Outline",
       content: <OutlineSection />,
-    },
-    {
-      id: "trace-samples",
-      title: "Trace Samples",
-      content: <TraceSection />,
-      headerActions: <SectionActionLabel>all supported formats</SectionActionLabel>,
     },
   ];
 
@@ -425,8 +425,8 @@ function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchStat
   ];
 
   return (
-    <div style={frameStyle}>
-      <div style={shellStyle}>
+    <div style={stageStyle}>
+      <div style={frameStyle}>
         <Workbench
           initialState={initialState}
           activityBar={{ items: activityItems }}
@@ -449,10 +449,17 @@ function buildDefaultState(): Partial<WorkbenchState> {
           createCodeTab("App.tsx"),
           createCodeTab("index.ts"),
           createDiffOverviewTab(),
-          createTraceTab("codex-trace.jsonl"),
+          createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx"),
+          createTraceTab("codex-cli-gpt-5.4-xhigh.raw.jsonl"),
         ],
         activeTabId: "App.tsx",
-        mruOrder: ["App.tsx", "index.ts", "workspace.diff", "codex-trace.jsonl"],
+        mruOrder: [
+          "App.tsx",
+          "index.ts",
+          "workspace.diff",
+          "dashboard/src/components/AgentTraceViewer.tsx.diff",
+          "codex-cli-gpt-5.4-xhigh.raw.jsonl",
+        ],
       },
     },
   };
@@ -460,18 +467,52 @@ function buildDefaultState(): Partial<WorkbenchState> {
 
 function buildSplitState(): Partial<WorkbenchState> {
   return {
-    splitTree: createBranch("horizontal", [createLeaf("group-main"), createLeaf("group-review")], [0.58, 0.42]),
+    splitTree: createBranch(
+      "horizontal",
+      [
+        createLeaf("group-main"),
+        createBranch(
+          "vertical",
+          [createLeaf("group-review"), createLeaf("group-trace")],
+          [0.52, 0.48],
+        ),
+      ],
+      [0.56, 0.44],
+    ),
     activeGroupId: "group-main",
     groups: {
       "group-main": {
-        tabs: [createCodeTab("App.tsx"), createCodeTab("index.ts"), createCodeTab("RunSummary.tsx")],
+        tabs: [
+          createCodeTab("App.tsx"),
+          createCodeTab("FileTree.tsx"),
+          createCodeTab("workbench.css"),
+        ],
         activeTabId: "App.tsx",
-        mruOrder: ["App.tsx", "index.ts", "RunSummary.tsx"],
+        mruOrder: ["App.tsx", "FileTree.tsx", "workbench.css"],
       },
       "group-review": {
-        tabs: [createDiffOverviewTab(), createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx")],
-        activeTabId: "workspace.diff",
-        mruOrder: ["workspace.diff", "dashboard/src/components/AgentTraceViewer.tsx.diff"],
+        tabs: [
+          createDiffOverviewTab(),
+          createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx"),
+          createDiffFileTab("dashboard/src/components/FileTree.tsx"),
+        ],
+        activeTabId: "dashboard/src/components/AgentTraceViewer.tsx.diff",
+        mruOrder: [
+          "dashboard/src/components/AgentTraceViewer.tsx.diff",
+          "workspace.diff",
+          "dashboard/src/components/FileTree.tsx.diff",
+        ],
+      },
+      "group-trace": {
+        tabs: [
+          createTraceTab("codex-cli-gpt-5.4-xhigh.raw.jsonl"),
+          createTraceTab("claude-code-opus-4.6-max.raw.jsonl"),
+        ],
+        activeTabId: "claude-code-opus-4.6-max.raw.jsonl",
+        mruOrder: [
+          "claude-code-opus-4.6-max.raw.jsonl",
+          "codex-cli-gpt-5.4-xhigh.raw.jsonl",
+        ],
       },
     },
   };
@@ -482,7 +523,7 @@ function buildManyTabsState(): Partial<WorkbenchState> {
     ...exampleFiles.map((file) => createCodeTab(file.id)),
     createDiffOverviewTab(),
     ...exampleDiffFiles.map((file) => createDiffFileTab(file.path)),
-    ...traceSamples.slice(0, 3).map((sample) => createTraceTab(sample.id)),
+    ...traceSamples.map((sample) => createTraceTab(sample.id)),
   ];
 
   return {

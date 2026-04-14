@@ -44,6 +44,7 @@
   --mosaic-focus-ring: #007acc;
 
   --mosaic-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mosaic-font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --mosaic-font-size: 13px;
 }
 
@@ -87,4 +88,6 @@
   --mosaic-scrollbar-thumb-hover: rgba(100, 100, 100, 0.5);
 
   --mosaic-focus-ring: #007acc;
+  --mosaic-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mosaic-font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }

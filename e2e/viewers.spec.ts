@@ -12,9 +12,6 @@ test.describe("Flagship workbench viewers", () => {
     await page.goto(WORKBENCH_URL);
     await waitForWorkbench(page);
 
-    await page.locator('.mosaic-tab[data-tab-id="workspace.diff"]').click();
-    await expect(page.locator("text=3 files changed")).toHaveCount(2);
-
     await page
       .locator('.mosaic-sidebar[data-side="left"]')
       .locator("text=dashboard/src/components/AgentTraceViewer.tsx")
@@ -25,32 +22,45 @@ test.describe("Flagship workbench viewers", () => {
         '.mosaic-tab[data-tab-id="dashboard/src/components/AgentTraceViewer.tsx.diff"]',
       ),
     ).toHaveCount(1);
+    await expect(page.locator(".monaco-diff-editor")).toHaveCount(1);
 
-    await page.locator('.mosaic-tab[data-tab-id="codex-trace.jsonl"]').click();
+    await page.locator('.mosaic-tab[data-tab-id="codex-cli-gpt-5.4-xhigh.raw.jsonl"]').click();
     const editorContent = page.locator(".mosaic-editor-content").first();
     await expect(editorContent.getByText("Codex CLI")).toBeVisible();
     await expect(editorContent.getByText("tool calls")).toBeVisible();
-    await expect(editorContent.getByText("DiffViewer.tsx")).toBeVisible();
+    await expect(editorContent.getByRole("button", { name: "Top" })).toBeVisible();
   });
 });
 
 test.describe("Trace gallery", () => {
   test("all supported trace formats render in Storybook", async ({ page }) => {
     await page.goto(TRACE_GALLERY_URL);
-    await page.waitForSelector("text=Codex CLI", { timeout: 10000 });
+    await page.waitForSelector('.mosaic-tab[data-tab-id="codex-cli-gpt-5.4-xhigh.raw.jsonl"]', {
+      timeout: 10000,
+    });
 
-    for (const title of [
-      "Codex CLI",
-      "Claude Code",
-      "OpenCode",
-      "Gemini CLI",
-      "mini-swe-agent (OpenAI style)",
-      "mini-swe-agent (Anthropic style)",
+    for (const [id, title] of [
+      ["codex-cli-gpt-5.4-xhigh.raw.jsonl", "Codex CLI"],
+      ["claude-code-opus-4.6-max.raw.jsonl", "Claude Code"],
+      ["opencode-gemini-3.1-pro.raw.json", "OpenCode"],
+      ["gemini-cli-3.1-pro.raw.json", "Gemini CLI"],
+      ["mini-swe-agent-gpt-5.4.raw.json", "mini-swe-agent"],
     ]) {
-      await expect(page.locator(`text=${title}`)).toHaveCount(2);
+      const tab = page.locator(`.mosaic-tab[data-tab-id="${id}"]`);
+      await tab.scrollIntoViewIfNeeded();
+      await tab.click();
+      await expect(tab).toHaveClass(/active/);
+      if (title !== "mini-swe-agent") {
+        await expect(
+          page.locator(".mosaic-editor-content").first().getByText(title, { exact: true }),
+        ).toBeVisible();
+      }
     }
 
-    await expect(page.locator("text=Session Exit")).toHaveCount(2);
-    await expect(page.locator("text=Thinking")).toHaveCount(5);
+    await page.locator('.mosaic-tab[data-tab-id="claude-code-opus-4.6-max.raw.jsonl"]').click();
+    await expect(page.locator(".mosaic-editor-content").first().getByRole("button", { name: "Top" })).toBeVisible();
+
+    await page.locator('.mosaic-tab[data-tab-id="mini-swe-agent-gpt-5.4.raw.json"]').click();
+    await expect(page.locator(".mosaic-editor-content").first().getByText("29 tool calls")).toBeVisible();
   });
 });

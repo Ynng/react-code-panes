@@ -389,12 +389,13 @@
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--mosaic-scrollbar-thumb) transparent;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+  padding-bottom: 1px;
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar {
-  height: 2px;
+  height: 0;
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar-track {
@@ -402,11 +403,11 @@
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar-thumb {
-  background: var(--mosaic-scrollbar-thumb);
+  background: transparent;
 }
 
 .mosaic-tabbar-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--mosaic-scrollbar-thumb-hover);
+  background: transparent;
 }
 
 .mosaic-tabbar-actions {

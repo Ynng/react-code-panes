@@ -267,19 +267,20 @@ test.describe("Panel reorder", () => {
     await expect(panelTabs).toHaveCount(3);
 
     const firstTab = panelTabs.nth(0);
-    const lastTab = panelTabs.nth(2);
+    const tabBar = page.locator(".mosaic-panel-tabs");
 
     const firstBox = await firstTab.boundingBox();
-    const lastBox = await lastTab.boundingBox();
-    if (!firstBox || !lastBox) throw new Error("Panel tabs not found");
+    const tabBarBox = await tabBar.boundingBox();
+    if (!firstBox || !tabBarBox) throw new Error("Panel tabs not found");
 
-    // Drag first tab (Terminal) to after last tab (Output)
+    // Drag first tab (Terminal) to the empty space at the end of the tab strip.
+    // This hits the panel tab bar drop zone directly instead of relying on the last tab edge.
     await page.mouse.move(firstBox.x + firstBox.width / 2, firstBox.y + firstBox.height / 2);
     await page.mouse.down();
     await page.mouse.move(
-      lastBox.x + lastBox.width - 5,
-      lastBox.y + lastBox.height / 2,
-      { steps: 5 }
+      tabBarBox.x + tabBarBox.width - 8,
+      tabBarBox.y + tabBarBox.height / 2,
+      { steps: 12 }
     );
     await page.mouse.up();
 

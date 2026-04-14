@@ -65,7 +65,7 @@ export function ChangedFilesList({
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
                 flex: 1,
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                fontFamily: "var(--mosaic-font-family-mono)",
               }}
             >
               {file.path}
@@ -78,7 +78,7 @@ export function ChangedFilesList({
             <span
               style={{
                 fontSize: 11,
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                fontFamily: "var(--mosaic-font-family-mono)",
                 flexShrink: 0,
               }}
             >

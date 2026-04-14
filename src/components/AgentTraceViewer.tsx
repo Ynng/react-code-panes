@@ -33,7 +33,7 @@ const INLINE_CODE_STYLE: CSSProperties = {
   padding: "1px 3px",
   borderRadius: 4,
   background: "rgba(110,118,129,0.25)",
-  fontFamily: "var(--font-mono, 'Cascadia Code', 'Fira Code', Consolas, monospace)",
+  fontFamily: "var(--mosaic-font-family-mono)",
 };
 
 const HIGHLIGHT_PRE_STYLE: CSSProperties = {
@@ -45,7 +45,7 @@ const HIGHLIGHT_PRE_STYLE: CSSProperties = {
   wordBreak: "break-word",
   fontSize: 11,
   color: "#cccccc",
-  fontFamily: "var(--font-mono, 'Cascadia Code', Consolas, monospace)",
+  fontFamily: "var(--mosaic-font-family-mono)",
   margin: 0,
   background: "transparent",
 };
@@ -181,7 +181,7 @@ function ShikiBlock({ html }: { html: string }) {
   return (
     <div
       className="shiki-container"
-      style={{ padding: "8px 12px", maxHeight: 300, overflow: "auto", fontSize: 11, lineHeight: "1.5em", fontFamily: "var(--font-mono, 'Cascadia Code', Consolas, monospace)" }}
+      style={{ padding: "8px 12px", maxHeight: 300, overflow: "auto", fontSize: 11, lineHeight: "1.5em", fontFamily: "var(--mosaic-font-family-mono)" }}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -254,8 +254,8 @@ function renderFormattedText(text: string) {
       const code = newlineIndex > 0 ? inner.slice(newlineIndex + 1) : inner;
       elements.push(
         <div key={`code-${partIndex}`} style={{ margin: "16px 0", border: "1px solid #3c3c3c", background: "#1a1a1a", overflow: "hidden", borderRadius: 4 }}>
-          {language && <div style={{ padding: "4px 12px", fontSize: 11, color: "#6e6e6e", background: "#252526", borderBottom: "1px solid #3c3c3c", fontFamily: "var(--font-mono, Consolas, monospace)" }}>{language}</div>}
-          <pre style={{ padding: "8px 12px", fontSize: 12, fontFamily: "var(--font-mono, 'Cascadia Code', Consolas, monospace)", color: "#d4d4d4", overflowX: "auto", lineHeight: 1.5, margin: 0 }}>{code}</pre>
+          {language && <div style={{ padding: "4px 12px", fontSize: 11, color: "#6e6e6e", background: "#252526", borderBottom: "1px solid #3c3c3c", fontFamily: "var(--mosaic-font-family-mono)" }}>{language}</div>}
+          <pre style={{ padding: "8px 12px", fontSize: 12, fontFamily: "var(--mosaic-font-family-mono)", color: "#d4d4d4", overflowX: "auto", lineHeight: 1.5, margin: 0 }}>{code}</pre>
         </div>,
       );
       return;
@@ -372,7 +372,7 @@ function CompactToolCall({
           {labelParts.prefix}
           {labelParts.code && <> <code style={INLINE_CODE_STYLE}>{labelParts.code}</code></>}
         </span>
-        {isError && <span style={{ fontSize: 10, flexShrink: 0, fontFamily: "monospace", color: "#f14c4c" }}>ERR</span>}
+        {isError && <span style={{ fontSize: 10, flexShrink: 0, fontFamily: "var(--mosaic-font-family-mono)", color: "#f14c4c" }}>ERR</span>}
         <span className="tool-chevron" style={{ display: "inline-flex", width: 12, height: 12, alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: open ? 0.6 : 0, transition: "opacity 100ms" }}>
           <ChevronIcon open={open} />
         </span>
@@ -388,7 +388,7 @@ function CompactToolCall({
             <div style={{ border: "1px solid #454545", borderRadius: 6, background: "#1e1e1e", margin: "4px 0", overflow: "hidden" }}>
               <div style={{ padding: "8px 12px", background: "#252526", borderBottom: "1px solid #454545", fontSize: 12, color: "#858585", display: "flex", alignItems: "center", gap: 6 }}>
                 <span>Output ({resultLines} lines)</span>
-                {isError && <span style={{ fontSize: 10, fontFamily: "monospace", color: "#f14c4c" }}>ERR</span>}
+                {isError && <span style={{ fontSize: 10, fontFamily: "var(--mosaic-font-family-mono)", color: "#f14c4c" }}>ERR</span>}
               </div>
               <HighlightedOutput content={resultText} toolName={toolCall.name} />
             </div>
@@ -412,7 +412,7 @@ function PreambleTurn({ turn }: { turn: AgentTraceTurn }) {
           <span style={{ fontWeight: "normal", marginLeft: 4 }}>({text.length.toLocaleString()} chars)</span>
         </button>
         {open && (
-          <pre style={{ marginTop: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12, color: "#d4d4d4", maxHeight: 400, overflow: "auto", fontFamily: "var(--font-mono, Consolas, monospace)", lineHeight: 1.6, marginLeft: 14, padding: 12, background: "#1a1a1a", border: "1px solid #3c3c3c", borderRadius: 4 }}>
+          <pre style={{ marginTop: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12, color: "#d4d4d4", maxHeight: 400, overflow: "auto", fontFamily: "var(--mosaic-font-family-mono)", lineHeight: 1.6, marginLeft: 14, padding: 12, background: "#1a1a1a", border: "1px solid #3c3c3c", borderRadius: 4 }}>
             {text}
           </pre>
         )}
@@ -446,7 +446,7 @@ function StepView({ step }: { step: Step }) {
   if (turn.type === "exit") {
     return (
       <div id={`step-${step.index}`} style={{ padding: "8px 16px", margin: "8px 0" }}>
-        <div style={{ fontSize: 12, color: "#d4d4d4", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: "1.5em", background: "rgba(200,45,72,0.12)", border: "1px solid rgba(200,45,72,0.3)", borderRadius: 4, padding: "10px 12px", fontFamily: "var(--font-mono, Consolas, monospace)" }}>
+        <div style={{ fontSize: 12, color: "#d4d4d4", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: "1.5em", background: "rgba(200,45,72,0.12)", border: "1px solid rgba(200,45,72,0.3)", borderRadius: 4, padding: "10px 12px", fontFamily: "var(--mosaic-font-family-mono)" }}>
           <div style={{ fontSize: 11, color: "#c74e39", fontWeight: 600, marginBottom: 6, fontFamily: "inherit" }}>Session Exit</div>
           {renderFormattedText(turn.text ?? "")}
         </div>
@@ -580,7 +580,7 @@ export function AgentTraceViewer({ turns, batch, label }: AgentTraceViewerProps)
 
   return (
     <HighlighterContext.Provider value={highlighter}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "var(--mosaic-font-family)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, fontSize: 11, color: "#6e6e6e", background: "#252526", borderBottom: "1px solid #3c3c3c", padding: "4px 16px", height: 26 }}>
           {heading && <span style={{ color: "#cccccc", fontWeight: 500 }}>{heading}</span>}
           {heading && <span style={{ color: "#3c3c3c" }}>|</span>}

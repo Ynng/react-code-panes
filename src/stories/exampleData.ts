@@ -1,11 +1,17 @@
+import type { AgentTraceTurn } from "../types/agentTrace";
+import { parseAgentTrace } from "../utils/agentTrace";
 import type { ChangedFileItem, CodeFileTreeItem } from "../index";
+import claudeCodeTraceRaw from "./fixtures/claude-code-opus-4.6-max.raw.jsonl?raw";
+import codexTraceRaw from "./fixtures/codex-cli-gpt-5.4-xhigh.raw.jsonl?raw";
+import geminiTraceRaw from "./fixtures/gemini-cli-3.1-pro.raw.json?raw";
+import miniSweAgentTraceRaw from "./fixtures/mini-swe-agent-gpt-5.4.raw.json?raw";
+import openCodeTraceRaw from "./fixtures/opencode-gemini-3.1-pro.raw.json?raw";
 
 export interface ExampleFile {
   id: string;
   path: string;
   language: string;
   content: string;
-  status?: "added" | "deleted" | "modified" | "renamed";
 }
 
 export interface ExampleDiffFile extends ChangedFileItem {
@@ -17,7 +23,9 @@ export interface ExampleDiffFile extends ChangedFileItem {
 export interface TraceSample {
   id: string;
   title: string;
+  path: string;
   raw: string;
+  turns: AgentTraceTurn[];
 }
 
 export const exampleFiles: ExampleFile[] = [
@@ -86,6 +94,81 @@ export function RunSummary() {
       </dl>
     </section>
   );
+}
+`,
+  },
+  {
+    id: "AgentTraceViewer.tsx",
+    path: "dashboard/src/components/AgentTraceViewer.tsx",
+    language: "tsx",
+    content: `type Props = {
+  turns: Turn[];
+  filter?: "all" | "assistant" | "tool";
+};
+
+export function AgentTraceViewer({ turns, filter = "all" }: Props) {
+  const visibleTurns = turns.filter((turn) => {
+    if (filter === "assistant") return turn.type === "assistant";
+    if (filter === "tool") return turn.type === "tool_result";
+    return true;
+  });
+
+  return (
+    <div className="trace-viewer">
+      <TraceToolbar filter={filter} />
+      {visibleTurns.map((turn) => (
+        <TraceRow key={turn.id} turn={turn} />
+      ))}
+    </div>
+  );
+}
+`,
+  },
+  {
+    id: "FileTree.tsx",
+    path: "dashboard/src/components/FileTree.tsx",
+    language: "tsx",
+    content: `export function FileTree({ files, onOpenFile }: Props) {
+  return (
+    <div className="file-tree">
+      {files.map((file) => (
+        <button
+          key={file.path}
+          className="file-tree-row"
+          onClick={() => onOpenFile(file.path)}
+        >
+          <FileIcon filename={file.path} />
+          <span className="file-tree-label">{file.path}</span>
+          {file.status && <span className="file-tree-status">{file.status}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+`,
+  },
+  {
+    id: "workbench.css",
+    path: "dashboard/src/styles/workbench.css",
+    language: "css",
+    content: `.trace-viewer {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.trace-toolbar {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.file-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
 }
 `,
   },
@@ -166,30 +249,6 @@ dist
 *.log
 coverage
 `,
-  },
-  {
-    id: "workbench.css",
-    path: "dashboard/src/styles/workbench.css",
-    language: "css",
-    content: `.dashboard-shell {
-  display: grid;
-  gap: 18px;
-  padding: 24px;
-}
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1.25fr 1fr;
-  gap: 16px;
-}
-`,
-    status: "modified",
   },
 ];
 
@@ -325,7 +384,7 @@ index 1e14dd1..78b4aa2 100644
 +  turns: Turn[];
 +  filter?: "all" | "assistant" | "tool";
 +};
- 
+
 -export function AgentTraceViewer({ turns }: Props) {
 +export function AgentTraceViewer({ turns, filter = "all" }: Props) {
 +  const visibleTurns = turns.filter((turn) => {
@@ -386,7 +445,7 @@ index 8fe32ab..1f53ee7 100644
 +  padding-bottom: 8px;
 +  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
  }
- 
+
  .file-tree-row {
    display: flex;
    align-items: center;
@@ -411,28 +470,14 @@ export const exampleFileTree: CodeFileTreeItem[] = [
             type: "folder",
             children: [
               { path: "dashboard/src/components/RunSummary.tsx", type: "file" },
-              {
-                path: "dashboard/src/components/AgentTraceViewer.tsx",
-                type: "file",
-                status: "modified",
-              },
-              {
-                path: "dashboard/src/components/FileTree.tsx",
-                type: "file",
-                status: "modified",
-              },
+              { path: "dashboard/src/components/AgentTraceViewer.tsx", type: "file" },
+              { path: "dashboard/src/components/FileTree.tsx", type: "file" },
             ],
           },
           {
             path: "dashboard/src/styles",
             type: "folder",
-            children: [
-              {
-                path: "dashboard/src/styles/workbench.css",
-                type: "file",
-                status: "modified",
-              },
-            ],
+            children: [{ path: "dashboard/src/styles/workbench.css", type: "file" }],
           },
         ],
       },
@@ -461,126 +506,75 @@ export const exampleFileTree: CodeFileTreeItem[] = [
   },
 ];
 
-export const traceSamples: TraceSample[] = [
+const traceFixtureSamples = [
   {
-    id: "codex-trace.jsonl",
+    id: "codex-cli-gpt-5.4-xhigh.raw.jsonl",
     title: "Codex CLI",
-    raw: `{"type":"session_meta","timestamp":"2026-04-14T01:00:00Z","payload":{"cwd":"/workspace"}}
-{"type":"response_item","timestamp":"2026-04-14T01:00:01Z","payload":{"type":"message","role":"user","content":"Investigate why the workbench diff tab is blank."}}
-{"type":"response_item","timestamp":"2026-04-14T01:00:02Z","payload":{"type":"message","role":"assistant","content":"I’ll inspect the diff viewer and related styles."}}
-{"type":"response_item","timestamp":"2026-04-14T01:00:03Z","payload":{"type":"reasoning","summary":"The failure likely comes from a missing height contract or empty parsed diff state."}}
-{"type":"response_item","timestamp":"2026-04-14T01:00:04Z","payload":{"type":"function_call","call_id":"call_read","name":"read_file","arguments":"{\\"path\\":\\"dashboard/src/components/DiffViewer.tsx\\"}"}}
-{"type":"response_item","timestamp":"2026-04-14T01:00:05Z","payload":{"type":"function_call_output","call_id":"call_read","output":"export function DiffViewer(){ return null; }"}}
-{"type":"response_item","timestamp":"2026-04-14T01:00:06Z","payload":{"type":"message","role":"assistant","content":"The component never renders parsed hunks. I’m preparing a fix."}}`,
+    path: "rollouts/codex/codex-cli-gpt-5.4-xhigh.raw.jsonl",
+    raw: codexTraceRaw,
   },
   {
-    id: "claude-trace.jsonl",
+    id: "claude-code-opus-4.6-max.raw.jsonl",
     title: "Claude Code",
-    raw: `{"type":"user","timestamp":"2026-04-14T02:00:00Z","message":{"role":"user","content":"Open the file tree component and add git status badges."}}
-{"type":"assistant","timestamp":"2026-04-14T02:00:02Z","message":{"role":"assistant","content":[{"type":"thinking","text":"Need the file icon row plus a trailing status token."},{"type":"text","text":"I’m updating the file tree rows and keeping the drag target intact."},{"type":"tool_use","id":"toolu_1","name":"edit_file","input":{"path":"dashboard/src/components/FileTree.tsx","find":"<span>{file.path}</span>","replace":"<span>{file.path}</span><StatusBadge status={file.status} />"}}]}}
-{"type":"user","timestamp":"2026-04-14T02:00:04Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_1","content":"Applied 1 edit to dashboard/src/components/FileTree.tsx"}]}}
-{"type":"assistant","timestamp":"2026-04-14T02:00:05Z","message":{"role":"assistant","content":[{"type":"text","text":"Status badges are in place and preserve the click target."}]}}`,
+    path: "rollouts/claude/claude-code-opus-4.6-max.raw.jsonl",
+    raw: claudeCodeTraceRaw,
   },
   {
-    id: "opencode-trace.json",
-    title: "OpenCode",
-    raw: `[
-  {"type":"step_start"},
-  {"type":"tool_use","part":{"tool":"read","callID":"read_1","state":{"input":{"path":"dashboard/src/App.tsx"},"output":"<main className=\\"dashboard-shell\\">..."}}},
-  {"type":"text","part":{"text":"The layout already has the main shell and summary widgets."}},
-  {"type":"step_start"},
-  {"type":"tool_use","part":{"tool":"write","callID":"write_1","state":{"input":{"path":"dashboard/src/styles/workbench.css"},"output":"Added toolbar spacing and active row styling."}}},
-  {"type":"text","part":{"text":"The workspace styling now matches the richer review story."}}
-]`,
-  },
-  {
-    id: "gemini-trace.json",
+    id: "gemini-cli-3.1-pro.raw.json",
     title: "Gemini CLI",
-    raw: `{
-  "sessionId": "gemini-session",
-  "messages": [
-    {
-      "timestamp": "2026-04-14T03:00:00Z",
-      "type": "user",
-      "content": "Compare the original and modified workbench.css files."
-    },
-    {
-      "timestamp": "2026-04-14T03:00:02Z",
-      "type": "gemini",
-      "thoughts": [
-        { "subject": "Plan", "description": "Load both versions and summarize the visual contract changes." }
-      ],
-      "toolCalls": [
-        {
-          "id": "diff_1",
-          "name": "read_diff_pair",
-          "args": { "path": "dashboard/src/styles/workbench.css" },
-          "resultDisplay": "Loaded 2 file versions and 1 unified diff."
-        }
-      ],
-      "content": "The update adds a toolbar and stronger row affordances without changing the grid structure."
-    }
-  ]
-}`,
+    path: "rollouts/gemini/gemini-cli-3.1-pro.raw.json",
+    raw: geminiTraceRaw,
   },
   {
-    id: "mini-swe-agent-openai.json",
-    title: "mini-swe-agent (OpenAI style)",
-    raw: `{
-  "trajectory_format": "mini-swe-agent/openai",
-  "messages": [
-    { "role": "system", "content": "You are a coding agent inside the eval harness." },
-    { "role": "user", "content": "Patch the trace viewer so tool outputs are collapsible." },
-    {
-      "role": "assistant",
-      "output": [
-        { "type": "reasoning", "summary": [{ "text": "Need to preserve the existing grouping but add local disclosure state." }] },
-        { "type": "function_call", "name": "read_file", "call_id": "mini_read_1", "arguments": "{\\"path\\":\\"dashboard/src/components/AgentTraceViewer.tsx\\"}" },
-        { "type": "message", "role": "assistant", "content": [{ "type": "output_text", "text": "I found the tool rows and will wrap them in a disclosure panel." }] }
-      ]
-    },
-    { "type": "function_call_output", "call_id": "mini_read_1", "output": "CompactToolCall currently renders input/output inline." },
-    { "type": "exit", "content": "Submitted patch.", "extra": { "exit_status": "submitted", "submission": "diff attached" } }
-  ]
-}`,
+    id: "opencode-gemini-3.1-pro.raw.json",
+    title: "OpenCode",
+    path: "rollouts/opencode/opencode-gemini-3.1-pro.raw.json",
+    raw: openCodeTraceRaw,
   },
   {
-    id: "mini-swe-agent-anthropic.json",
-    title: "mini-swe-agent (Anthropic style)",
-    raw: `{
-  "trajectory_format": "mini-swe-agent/anthropic",
-  "messages": [
-    { "role": "system", "content": "You are a coding agent inside the eval harness." },
-    { "role": "user", "content": "Make the file tree rows draggable into the editor groups." },
-    {
-      "role": "assistant",
-      "reasoning_content": "Use the existing drag store plus the library drag MIME type.",
-      "content": "I’m wiring drag metadata into the explorer rows.",
-      "tool_calls": [
-        {
-          "id": "anthropic_edit_1",
-          "function": {
-            "name": "edit_file",
-            "arguments": "{\\"path\\":\\"src/components/CodeFileTree.tsx\\",\\"summary\\":\\"add drag handling\\"}"
-          }
-        }
-      ]
-    },
-    {
-      "role": "tool",
-      "tool_call_id": "anthropic_edit_1",
-      "content": "Updated CodeFileTree.tsx with dragstart behavior."
-    },
-    {
-      "role": "exit",
-      "content": "Patch ready for validation.",
-      "extra": {
-        "exit_status": "submitted",
-        "submission": "CodeFileTree drag support"
-      }
-    }
-  ]
-}`,
+    id: "mini-swe-agent-gpt-5.4.raw.json",
+    title: "mini-swe-agent",
+    path: "rollouts/mini-swe-agent/mini-swe-agent-gpt-5.4.raw.json",
+    raw: miniSweAgentTraceRaw,
+  },
+] as const;
+
+export const traceSamples: TraceSample[] = traceFixtureSamples.map((sample) => ({
+  ...sample,
+  turns: parseAgentTrace(sample.raw),
+}));
+
+export const traceFileTree: CodeFileTreeItem[] = [
+  {
+    path: "rollouts",
+    type: "folder",
+    children: [
+      {
+        path: "rollouts/codex",
+        type: "folder",
+        children: [{ path: "rollouts/codex/codex-cli-gpt-5.4-xhigh.raw.jsonl", type: "file" }],
+      },
+      {
+        path: "rollouts/claude",
+        type: "folder",
+        children: [{ path: "rollouts/claude/claude-code-opus-4.6-max.raw.jsonl", type: "file" }],
+      },
+      {
+        path: "rollouts/gemini",
+        type: "folder",
+        children: [{ path: "rollouts/gemini/gemini-cli-3.1-pro.raw.json", type: "file" }],
+      },
+      {
+        path: "rollouts/opencode",
+        type: "folder",
+        children: [{ path: "rollouts/opencode/opencode-gemini-3.1-pro.raw.json", type: "file" }],
+      },
+      {
+        path: "rollouts/mini-swe-agent",
+        type: "folder",
+        children: [{ path: "rollouts/mini-swe-agent/mini-swe-agent-gpt-5.4.raw.json", type: "file" }],
+      },
+    ],
   },
 ];
 
@@ -594,4 +588,12 @@ export function getExampleFileById(id: string) {
 
 export function getExampleDiffFile(path: string) {
   return exampleDiffFiles.find((file) => file.path === path);
+}
+
+export function getTraceSampleById(id: string) {
+  return traceSamples.find((sample) => sample.id === id);
+}
+
+export function getTraceSampleByPath(path: string) {
+  return traceSamples.find((sample) => sample.path === path);
 }
