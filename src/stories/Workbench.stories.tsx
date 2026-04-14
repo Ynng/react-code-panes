@@ -1,116 +1,58 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useCallback, CSSProperties } from "react";
+import { CSSProperties, ReactNode } from "react";
+import type { ActivityBarItem } from "../components/ActivityBar";
 import {
+  AgentTraceViewer,
+  ChangedFilesList,
+  CodeFileTree,
+  EditorBreadcrumb,
+  FileIcon,
+  MonacoCodeViewer,
+  MonacoDiffViewer,
+  PanelTab,
+  SidebarSection,
+  Tab,
+  UnifiedDiffPreview,
   Workbench,
+  WorkbenchState,
+  createBranch,
+  createLeaf,
+  parseAgentTrace,
   useWorkbench,
   useWorkbenchActions,
-  Tab,
-  SidebarSection,
-  PanelTab,
-  WorkbenchState,
-  createLeaf,
-  createBranch,
-  DRAG_TYPE,
 } from "../index";
-import type { ActivityBarItem } from "../components/ActivityBar";
-import { setDragTab } from "../utils/dragStore";
+import {
+  exampleDiffFiles,
+  exampleFileTree,
+  exampleFiles,
+  getExampleDiffFile,
+  getExampleFileById,
+  getExampleFileByPath,
+  traceSamples,
+  workspaceUnifiedDiff,
+} from "./exampleData";
 
-// ─── Helpers ─────────────────────────────────────────────────
-
-const fileColors: Record<string, string> = {
-  ts: "#3178c6",
-  tsx: "#3178c6",
-  js: "#f7df1e",
-  css: "#264de4",
-  json: "#5b5b5b",
-  md: "#ffffff",
-  html: "#e34c26",
-  py: "#3572A5",
+const frameStyle: CSSProperties = {
+  width: "min(1440px, calc(100vw - 48px))",
+  height: 860,
+  margin: "24px auto",
+  borderRadius: 18,
+  overflow: "hidden",
+  border: "1px solid rgba(148, 163, 184, 0.16)",
+  boxShadow: "0 30px 80px rgba(15, 23, 42, 0.3)",
+  background:
+    "radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 26%), #0f172a",
+  padding: 14,
+  boxSizing: "border-box",
 };
 
-function FileIcon({ ext }: { ext: string }) {
-  return (
-    <span
-      style={{
-        width: 16,
-        height: 16,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 9,
-        fontWeight: 700,
-        color: fileColors[ext] ?? "#999",
-        fontFamily: "monospace",
-      }}
-    >
-      {ext.toUpperCase()}
-    </span>
-  );
-}
-
-function FakeEditor({ filename }: { filename: string }) {
-  const lines = Array.from({ length: 30 }, (_, i) => {
-    const indent = i % 5 === 0 ? "" : i % 3 === 0 ? "    " : "  ";
-    const keywords = [
-      `${indent}import { useState } from 'react';`,
-      `${indent}export function ${filename.replace(/\.\w+$/, "")}() {`,
-      `${indent}  const [count, setCount] = useState(0);`,
-      `${indent}  // ${filename} - line ${i + 1}`,
-      `${indent}  return <div>{count}</div>;`,
-      `${indent}}`,
-      ``,
-      `${indent}interface Props {`,
-      `${indent}  value: string;`,
-      `${indent}  onChange: (v: string) => void;`,
-      `${indent}}`,
-    ];
-    return keywords[i % keywords.length];
-  });
-
-  return (
-    <div
-      style={{
-        padding: "8px 16px",
-        fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
-        fontSize: 13,
-        lineHeight: "20px",
-        color: "#d4d4d4",
-        whiteSpace: "pre",
-        minHeight: "100%",
-      }}
-    >
-      {lines.map((line, i) => (
-        <div key={i} style={{ display: "flex" }}>
-          <span
-            style={{
-              width: 50,
-              textAlign: "right",
-              paddingRight: 16,
-              color: "#858585",
-              userSelect: "none",
-              flexShrink: 0,
-            }}
-          >
-            {i + 1}
-          </span>
-          <span>{line}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function createFileTab(name: string, ext: string, opts?: Partial<Tab>): Tab {
-  return {
-    id: name,
-    title: name,
-    icon: <FileIcon ext={ext} />,
-    content: <FakeEditor filename={name} />,
-    ...opts,
-  };
-}
-
-// ─── SVG icons ───────────────────────────────────────────────
+const shellStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  borderRadius: 14,
+  overflow: "hidden",
+  background: "#111827",
+};
 
 function ExplorerIcon() {
   return (
@@ -141,356 +83,441 @@ function GitIcon() {
   );
 }
 
-function ExtensionsIcon() {
+function TraceIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="3" width="8" height="8" rx="1" />
-      <rect x="13" y="3" width="8" height="8" rx="1" />
-      <rect x="3" y="13" width="8" height="8" rx="1" />
-      <rect x="13" y="13" width="8" height="8" rx="1" />
+      <path d="M4 6H20" />
+      <path d="M4 12H12" />
+      <path d="M4 18H16" />
+      <circle cx="17" cy="18" r="3" />
     </svg>
   );
 }
 
-// ─── Sidebar content ─────────────────────────────────────────
+function SectionActionLabel({ children }: { children: ReactNode }) {
+  return (
+    <span
+      style={{
+        fontSize: 10,
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        color: "#6b7280",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
 
-const files = [
-  { name: "App.tsx", ext: "tsx" },
-  { name: "index.ts", ext: "ts" },
-  { name: "styles.css", ext: "css" },
-  { name: "package.json", ext: "json" },
-  { name: "README.md", ext: "md" },
-  { name: "server.py", ext: "py" },
-  { name: "vite.config.ts", ext: "ts" },
-  { name: "tsconfig.json", ext: "json" },
-  { name: "utils.ts", ext: "ts" },
-  { name: "hooks.ts", ext: "ts" },
-  { name: "types.ts", ext: "ts" },
-  { name: "api.ts", ext: "ts" },
-  { name: "auth.ts", ext: "ts" },
-  { name: "router.tsx", ext: "tsx" },
-  { name: "store.ts", ext: "ts" },
-];
+function createCodeTab(fileId: string): Tab {
+  const file = getExampleFileById(fileId);
+  if (!file) {
+    return {
+      id: fileId,
+      title: fileId,
+      content: <div style={{ padding: 16 }}>Missing example file: {fileId}</div>,
+    };
+  }
 
-function FileTree() {
+  return {
+    id: file.id,
+    title: file.id,
+    icon: <FileIcon filename={file.id} />,
+    labelColor: file.status ? "#e2c08d" : undefined,
+    content: (
+      <EditorBreadcrumb filePath={file.path}>
+        <MonacoCodeViewer value={file.content} language={file.language} path={file.path} />
+      </EditorBreadcrumb>
+    ),
+  };
+}
+
+function createDiffOverviewTab(): Tab {
+  return {
+    id: "workspace.diff",
+    title: "workspace.diff",
+    icon: <FileIcon filename="workspace.diff" />,
+    content: <UnifiedDiffPreview diff={workspaceUnifiedDiff} />,
+  };
+}
+
+function createDiffFileTab(path: string): Tab {
+  const diffFile = getExampleDiffFile(path);
+  const title = `${path.split("/").pop() ?? path}.diff`;
+  if (!diffFile) {
+    return {
+      id: `${path}.diff`,
+      title,
+      icon: <FileIcon filename={title} />,
+      content: <div style={{ padding: 16 }}>Missing diff fixture: {path}</div>,
+    };
+  }
+
+  return {
+    id: `${path}.diff`,
+    title,
+    icon: <FileIcon filename={path.split("/").pop() ?? path} />,
+    labelColor: "#e2c08d",
+    content: (
+      <EditorBreadcrumb filePath={path}>
+        <MonacoDiffViewer
+          original={diffFile.original}
+          modified={diffFile.modified}
+          language={diffFile.language}
+        />
+      </EditorBreadcrumb>
+    ),
+  };
+}
+
+function createTraceTab(id: string): Tab {
+  const sample = traceSamples.find((candidate) => candidate.id === id);
+  if (!sample) {
+    return {
+      id,
+      title: id,
+      content: <div style={{ padding: 16 }}>Missing trace fixture: {id}</div>,
+    };
+  }
+
+  return {
+    id: sample.id,
+    title: sample.id,
+    icon: <FileIcon filename={sample.id} />,
+    content: (
+      <AgentTraceViewer
+        turns={parseAgentTrace(sample.raw)}
+        label={sample.title}
+      />
+    ),
+  };
+}
+
+const outlineByFileId: Record<string, string[]> = {
+  "App.tsx": ["App()", "dashboard-shell", "dashboard-header", "RunSummary", "AgentTracePanel"],
+  "index.ts": ["App", "RunSummary", "AgentTracePanel", "buildReviewTabs"],
+  "RunSummary.tsx": ["rows", "RunSummary()", "summary-card", "summary-row"],
+  "server.py": ["RunRequest", "launch_run(request)"],
+  "workbench.css": [".dashboard-shell", ".dashboard-header", ".dashboard-grid"],
+  "workspace.diff": ["AgentTraceViewer.tsx", "FileTree.tsx", "workbench.css"],
+};
+
+function findActiveTabId(state: WorkbenchState) {
+  const activeGroupId = state.activeGroupId;
+  if (!activeGroupId) return null;
+  return state.groups[activeGroupId]?.activeTabId ?? null;
+}
+
+function ExplorerSection() {
   const { state } = useWorkbench();
   const actions = useWorkbenchActions();
-  const groupId = state.activeGroupId ?? Object.keys(state.groups)[0];
+  const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
+  const activeTabId = findActiveTabId(state);
+  const activeFile = activeTabId ? getExampleFileById(activeTabId) : undefined;
 
-  const handleClick = useCallback(
-    (file: { name: string; ext: string }) => {
-      if (!groupId) return;
-      actions.openTab(groupId, createFileTab(file.name, file.ext));
-    },
-    [groupId, actions]
+  return (
+    <CodeFileTree
+      items={exampleFileTree}
+      selectedPath={activeFile?.path}
+      onOpenFile={(item) => {
+        if (item.type !== "file" || !activeGroupId) return;
+        const file = getExampleFileByPath(item.path);
+        if (!file) return;
+        actions.activateOrOpenTab(activeGroupId, createCodeTab(file.id));
+      }}
+      getDragTab={(item) => {
+        if (item.type !== "file") return null;
+        const file = getExampleFileByPath(item.path);
+        return file ? createCodeTab(file.id) : null;
+      }}
+    />
   );
+}
 
-  const handleDragStart = useCallback(
-    (e: React.DragEvent, file: { name: string; ext: string }) => {
-      const tab = createFileTab(file.name, file.ext);
-      // Store full tab (with React elements) in the drag store
-      setDragTab(tab);
-      // Serializable marker in dataTransfer so drop targets can identify this drag
-      e.dataTransfer.setData(
-        DRAG_TYPE,
-        JSON.stringify({ type: "sidebar-file", tabId: tab.id })
-      );
-      e.dataTransfer.effectAllowed = "copy";
-    },
-    []
+function DiffSection() {
+  const { state } = useWorkbench();
+  const actions = useWorkbenchActions();
+  const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
+  const activeTabId = findActiveTabId(state);
+  const selectedPath = activeTabId?.endsWith(".diff")
+    ? activeTabId.slice(0, -5)
+    : activeTabId === "workspace.diff"
+      ? "workspace.diff"
+      : null;
+
+  return (
+    <ChangedFilesList
+      files={exampleDiffFiles}
+      selectedPath={selectedPath}
+      onSelectFile={(file) => {
+        if (!activeGroupId) return;
+        actions.activateOrOpenTab(activeGroupId, createDiffFileTab(file.path));
+      }}
+    />
   );
+}
 
-  const itemStyle: CSSProperties = {
-    padding: "2px 8px 2px 24px",
-    cursor: "pointer",
-    fontSize: 13,
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    whiteSpace: "nowrap",
-  };
+function OutlineSection() {
+  const { state } = useWorkbench();
+  const activeTabId = findActiveTabId(state) ?? "App.tsx";
+  const symbols = outlineByFileId[activeTabId] ?? ["No outline available"];
 
   return (
     <div>
-      {files.map((f) => (
+      {symbols.map((symbol) => (
         <div
-          key={f.name}
-          style={itemStyle}
-          draggable
-          onClick={() => handleClick(f)}
-          onDragStart={(e) => handleDragStart(e, f)}
-          onMouseOver={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--mosaic-bg-tertiary)";
-          }}
-          onMouseOut={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "transparent";
+          key={symbol}
+          style={{
+            padding: "4px 10px",
+            fontSize: 12,
+            color: "#cbd5e1",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
-          <FileIcon ext={f.ext} />
-          <span>{f.name}</span>
+          {symbol}
         </div>
       ))}
     </div>
   );
 }
 
-function OutlinePanel() {
-  const symbols = [
-    "App (function)",
-    "  props (const)",
-    "  handleClick (function)",
-    "  state (const)",
-    "  useEffect (hook)",
-    "Header (function)",
-    "Footer (function)",
-    "utils (module)",
-    "  formatDate (function)",
-    "  parseJSON (function)",
+function TraceSection() {
+  const { state } = useWorkbench();
+  const actions = useWorkbenchActions();
+  const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
+
+  return (
+    <div style={{ display: "grid", gap: 6, padding: 8 }}>
+      {traceSamples.map((sample) => (
+        <button
+          key={sample.id}
+          onClick={() => {
+            if (!activeGroupId) return;
+            actions.activateOrOpenTab(activeGroupId, createTraceTab(sample.id));
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 10px",
+            background: "#111827",
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            color: "#e5e7eb",
+            borderRadius: 8,
+            cursor: "pointer",
+            textAlign: "left",
+            fontSize: 12,
+          }}
+        >
+          <FileIcon filename={sample.id} />
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {sample.title}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ProblemsPanel() {
+  return (
+    <div style={{ padding: 12, color: "#e5e7eb", fontSize: 12, display: "grid", gap: 8 }}>
+      <div style={{ borderLeft: "3px solid #f59e0b", paddingLeft: 10 }}>
+        `CodeFileTree.tsx` uses a fixed row height that may clip long labels in narrow panes.
+      </div>
+      <div style={{ borderLeft: "3px solid #38bdf8", paddingLeft: 10 }}>
+        Consider memoizing parsed trace fixtures if you render many viewers on one page.
+      </div>
+    </div>
+  );
+}
+
+function TerminalPanel() {
+  return (
+    <pre
+      style={{
+        margin: 0,
+        padding: 12,
+        color: "#d1fae5",
+        fontSize: 12,
+        lineHeight: 1.55,
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+      }}
+    >
+{`$ npm run test:e2e
+
+Running 23 tests using 4 workers
+  ✓ workbench: clicking a tab activates it
+  ✓ workbench: dragging a file into a split opens Monaco
+  ✓ trace gallery: all trace formats render
+
+23 passed (14.7s)`}
+    </pre>
+  );
+}
+
+function OutputPanel() {
+  return (
+    <pre
+      style={{
+        margin: 0,
+        padding: 12,
+        color: "#cbd5e1",
+        fontSize: 12,
+        lineHeight: 1.55,
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+      }}
+    >
+{`{
+  "run_id": "run_20260410_213249_94mcl2",
+  "agent": "crest-alpha",
+  "pass_rate": 0.584,
+  "resolved": 132,
+  "total": 226
+}`}
+    </pre>
+  );
+}
+
+function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchState> }) {
+  const activityItems: ActivityBarItem[] = [
+    { id: "explorer", title: "Explorer", icon: <ExplorerIcon /> },
+    { id: "search", title: "Search", icon: <SearchIcon /> },
+    { id: "git", title: "Source Control", icon: <GitIcon /> },
+    { id: "trace", title: "Traces", icon: <TraceIcon /> },
+  ];
+
+  const leftSections: SidebarSection[] = [
+    {
+      id: "explorer",
+      title: "Explorer",
+      content: <ExplorerSection />,
+      headerActions: <SectionActionLabel>drag files into editors</SectionActionLabel>,
+    },
+    {
+      id: "diff",
+      title: "Workspace Diff",
+      content: <DiffSection />,
+      headerActions: <SectionActionLabel>review changed files</SectionActionLabel>,
+    },
+  ];
+
+  const rightSections: SidebarSection[] = [
+    {
+      id: "outline",
+      title: "Outline",
+      content: <OutlineSection />,
+    },
+    {
+      id: "trace-samples",
+      title: "Trace Samples",
+      content: <TraceSection />,
+      headerActions: <SectionActionLabel>all supported formats</SectionActionLabel>,
+    },
+  ];
+
+  const panelTabs: PanelTab[] = [
+    { id: "terminal", title: "Terminal", content: <TerminalPanel /> },
+    { id: "problems", title: "Problems", content: <ProblemsPanel /> },
+    { id: "output", title: "Output", content: <OutputPanel /> },
   ];
 
   return (
-    <div>
-      {symbols.map((s, i) => (
-        <div
-          key={i}
-          style={{
-            padding: "2px 8px",
-            fontSize: 12,
-            color: "var(--mosaic-sidebar-fg)",
-            cursor: "pointer",
-            whiteSpace: "pre",
-          }}
-        >
-          {s}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Panel content (bottom bar) ──────────────────────────────
-
-function TerminalContent() {
-  return (
-    <div
-      style={{
-        padding: "8px 12px",
-        fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
-        fontSize: 13,
-        lineHeight: "20px",
-        color: "#cccccc",
-        whiteSpace: "pre",
-      }}
-    >
-      <div style={{ color: "#6a9955" }}>~/react-code-panes $</div>
-      <div>npm run storybook</div>
-      <div style={{ color: "#569cd6" }}>Storybook 8.6.18 for react-vite started</div>
-      <div>Local: http://localhost:6006/</div>
-      <div style={{ color: "#6a9955" }}>~/react-code-panes $</div>
-      <div style={{ color: "#585858" }}>|</div>
-    </div>
-  );
-}
-
-function ProblemsContent() {
-  return (
-    <div style={{ padding: "8px 12px", fontSize: 13, color: "var(--mosaic-editor-fg)" }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "2px 0" }}>
-        <span style={{ color: "#f48771" }}>E</span>
-        <span>styles.css: Unknown property 'colr' (line 12)</span>
-      </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "2px 0" }}>
-        <span style={{ color: "#cca700" }}>W</span>
-        <span>index.ts: 'unused' is declared but never used (line 3)</span>
+    <div style={frameStyle}>
+      <div style={shellStyle}>
+        <Workbench
+          initialState={initialState}
+          activityBar={{ items: activityItems }}
+          leftSidebar={{ sections: leftSections, defaultWidth: 300, minWidth: 220 }}
+          rightSidebar={{ sections: rightSections, defaultWidth: 320, minWidth: 240 }}
+          panel={{ tabs: panelTabs, defaultHeight: 188, minHeight: 120 }}
+        />
       </div>
     </div>
   );
 }
 
-function OutputContent() {
-  return (
-    <div
-      style={{
-        padding: "8px 12px",
-        fontFamily: "monospace",
-        fontSize: 12,
-        lineHeight: "18px",
-        color: "#858585",
-      }}
-    >
-      <div>[Info] Build started...</div>
-      <div>[Info] Compiled 42 modules in 1.2s</div>
-      <div>[Info] Build complete.</div>
-    </div>
-  );
-}
-
-// ─── Story Configuration ─────────────────────────────────────
-
-const meta: Meta<typeof Workbench> = {
-  title: "Workbench",
-  component: Workbench,
-  parameters: { layout: "fullscreen" },
-  decorators: [
-    (Story) => (
-      <div style={{ width: "100vw", height: "100vh" }}>
-        <Story />
-      </div>
-    ),
-  ],
-};
-
-export default meta;
-type Story = StoryObj<typeof Workbench>;
-
-// ─── Shared config ───────────────────────────────────────────
-
-const activityBarItems: ActivityBarItem[] = [
-  { id: "explorer", icon: <ExplorerIcon />, title: "Explorer" },
-  { id: "search", icon: <SearchIcon />, title: "Search" },
-  { id: "git", icon: <GitIcon />, title: "Source Control" },
-  { id: "extensions", icon: <ExtensionsIcon />, title: "Extensions" },
-];
-
-const leftSections: SidebarSection[] = [
-  { id: "files", title: "Explorer", content: <FileTree />, defaultHeight: 400 },
-  { id: "outline", title: "Outline", content: <OutlinePanel />, defaultHeight: 200 },
-];
-
-const rightSections: SidebarSection[] = [
-  { id: "outline-right", title: "Document Outline", content: <OutlinePanel />, defaultHeight: 300 },
-];
-
-const panelTabs: PanelTab[] = [
-  { id: "terminal", title: "Terminal", content: <TerminalContent /> },
-  { id: "problems", title: "Problems", content: <ProblemsContent /> },
-  { id: "output", title: "Output", content: <OutputContent /> },
-];
-
-// ─── Initial states ──────────────────────────────────────────
-
-function makeInitialState(): Partial<WorkbenchState> {
-  const groupId = "group-0";
+function buildDefaultState(): Partial<WorkbenchState> {
   return {
-    splitTree: createLeaf(groupId),
+    splitTree: createLeaf("group-main"),
+    activeGroupId: "group-main",
     groups: {
-      [groupId]: {
+      "group-main": {
         tabs: [
-          createFileTab("App.tsx", "tsx"),
-          createFileTab("index.ts", "ts"),
-          createFileTab("styles.css", "css", { isDirty: true }),
+          createCodeTab("App.tsx"),
+          createCodeTab("index.ts"),
+          createDiffOverviewTab(),
+          createTraceTab("codex-trace.jsonl"),
         ],
         activeTabId: "App.tsx",
-        mruOrder: ["App.tsx", "index.ts", "styles.css"],
+        mruOrder: ["App.tsx", "index.ts", "workspace.diff", "codex-trace.jsonl"],
       },
     },
-    activeGroupId: groupId,
   };
 }
 
-function makeSplitState(): Partial<WorkbenchState> {
+function buildSplitState(): Partial<WorkbenchState> {
   return {
-    splitTree: createBranch("horizontal", [
-      createLeaf("group-left"),
-      createBranch("vertical", [
-        createLeaf("group-top-right"),
-        createLeaf("group-bottom-right"),
-      ]),
-    ]),
+    splitTree: createBranch("horizontal", [createLeaf("group-main"), createLeaf("group-review")], [0.58, 0.42]),
+    activeGroupId: "group-main",
     groups: {
-      "group-left": {
-        tabs: [createFileTab("App.tsx", "tsx"), createFileTab("index.ts", "ts")],
+      "group-main": {
+        tabs: [createCodeTab("App.tsx"), createCodeTab("index.ts"), createCodeTab("RunSummary.tsx")],
         activeTabId: "App.tsx",
-        mruOrder: ["App.tsx", "index.ts"],
+        mruOrder: ["App.tsx", "index.ts", "RunSummary.tsx"],
       },
-      "group-top-right": {
-        tabs: [createFileTab("styles.css", "css")],
-        activeTabId: "styles.css",
-        mruOrder: ["styles.css"],
-      },
-      "group-bottom-right": {
-        tabs: [createFileTab("package.json", "json"), createFileTab("tsconfig.json", "json")],
-        activeTabId: "package.json",
-        mruOrder: ["package.json", "tsconfig.json"],
+      "group-review": {
+        tabs: [createDiffOverviewTab(), createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx")],
+        activeTabId: "workspace.diff",
+        mruOrder: ["workspace.diff", "dashboard/src/components/AgentTraceViewer.tsx.diff"],
       },
     },
-    activeGroupId: "group-left",
   };
 }
 
-function makeManyTabsState(): Partial<WorkbenchState> {
-  const groupId = "group-0";
-  const tabs = Array.from({ length: 20 }, (_, i) => {
-    const ext = ["ts", "tsx", "css", "json", "md"][i % 5]!;
-    return createFileTab(`file-${i + 1}.${ext}`, ext, { isDirty: i % 4 === 0 });
-  });
+function buildManyTabsState(): Partial<WorkbenchState> {
+  const tabs = [
+    ...exampleFiles.map((file) => createCodeTab(file.id)),
+    createDiffOverviewTab(),
+    ...exampleDiffFiles.map((file) => createDiffFileTab(file.path)),
+    ...traceSamples.slice(0, 3).map((sample) => createTraceTab(sample.id)),
+  ];
+
   return {
-    splitTree: createLeaf(groupId),
+    splitTree: createLeaf("group-main"),
+    activeGroupId: "group-main",
     groups: {
-      [groupId]: { tabs, activeTabId: tabs[0].id, mruOrder: tabs.map((t) => t.id) },
+      "group-main": {
+        tabs,
+        activeTabId: "App.tsx",
+        mruOrder: tabs.map((tab) => tab.id),
+      },
     },
-    activeGroupId: groupId,
   };
 }
 
-// ─── Stories ─────────────────────────────────────────────────
+const meta = {
+  title: "Workbench",
+  component: Workbench,
+  parameters: {
+    layout: "fullscreen",
+  },
+} satisfies Meta<typeof Workbench>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const FullWorkbench: Story = {
-  render: () => (
-    <Workbench
-      initialState={makeInitialState()}
-      activityBar={{ items: activityBarItems }}
-      leftSidebar={{ title: "Explorer", sections: leftSections, defaultWidth: 260, minWidth: 170 }}
-      rightSidebar={{ title: "Outline", sections: rightSections, defaultWidth: 220, minWidth: 170 }}
-      panel={{ tabs: panelTabs, defaultHeight: 200, minHeight: 80 }}
-      theme="dark"
-    />
-  ),
-};
-
-export const LightTheme: Story = {
-  render: () => (
-    <Workbench
-      initialState={makeInitialState()}
-      activityBar={{ items: activityBarItems }}
-      leftSidebar={{ title: "Explorer", sections: leftSections, defaultWidth: 260, minWidth: 170 }}
-      panel={{ tabs: panelTabs, defaultHeight: 200, minHeight: 80 }}
-      theme="light"
-    />
-  ),
+  render: () => <ReviewWorkbench initialState={buildDefaultState()} />,
 };
 
 export const PreSplitLayout: Story = {
-  render: () => (
-    <Workbench
-      initialState={makeSplitState()}
-      activityBar={{ items: activityBarItems }}
-      leftSidebar={{ title: "Explorer", sections: leftSections, defaultWidth: 240, minWidth: 170 }}
-      panel={{ tabs: panelTabs, defaultHeight: 180, minHeight: 80 }}
-      theme="dark"
-    />
-  ),
-};
-
-export const MinimalEditor: Story = {
-  render: () => (
-    <Workbench initialState={makeInitialState()} theme="dark" />
-  ),
+  render: () => <ReviewWorkbench initialState={buildSplitState()} />,
 };
 
 export const ManyTabs: Story = {
-  render: () => (
-    <Workbench initialState={makeManyTabsState()} theme="dark" />
-  ),
-};
-
-export const EmptyWorkbench: Story = {
-  render: () => (
-    <Workbench
-      activityBar={{ items: activityBarItems }}
-      leftSidebar={{ title: "Explorer", sections: leftSections, defaultWidth: 260 }}
-      panel={{ tabs: panelTabs, defaultHeight: 200 }}
-      theme="dark"
-    />
-  ),
+  render: () => <ReviewWorkbench initialState={buildManyTabsState()} />,
 };

@@ -59,5 +59,9 @@
     "tsup": "^8.3.0",
     "typescript": "^5.6.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "shiki": "^4.0.2"
+  }
 }

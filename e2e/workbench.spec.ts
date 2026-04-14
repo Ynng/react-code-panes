@@ -312,42 +312,20 @@ test.describe("Panel state persists on toggle", () => {
   });
 });
 
-test.describe("Sidebar section reorder", () => {
-  test("dragging a section header reorders sections within sidebar", async ({ page }) => {
+test.describe("Sidebar sections", () => {
+  test("clicking a section header collapses and expands its content", async ({ page }) => {
     await page.goto(STORY_URL);
     await waitForStory(page);
 
-    const headers = page.locator('.mosaic-sidebar[data-side="left"] .mosaic-sidebar-section-header');
-    await expect(headers).toHaveCount(2);
+    const explorerToggle = page
+      .locator('.mosaic-sidebar[data-side="left"] .mosaic-sidebar-section-header-drag-handle')
+      .first();
 
-    const first = headers.nth(0);
-    const second = headers.nth(1);
-
-    const firstText = await first.textContent();
-    const firstBox = await first.boundingBox();
-    const secondBox = await second.boundingBox();
-    if (!firstBox || !secondBox) throw new Error("Section headers not found");
-
-    // Drag first section to the bottom half of the second section
-    // (need to target the section element, not just the header)
-    const secondSection = page
-      .locator('.mosaic-sidebar[data-side="left"] .mosaic-sidebar-section')
-      .nth(1);
-    const secondSectionBox = await secondSection.boundingBox();
-    if (!secondSectionBox) throw new Error("Second section not found");
-
-    await page.mouse.move(firstBox.x + firstBox.width / 2, firstBox.y + firstBox.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(
-      secondSectionBox.x + secondSectionBox.width / 2,
-      secondSectionBox.y + secondSectionBox.height - 5,
-      { steps: 5 }
-    );
-    await page.mouse.up();
-
-    // First header should now be different
-    const newFirstText = await headers.nth(0).textContent();
-    expect(newFirstText?.trim()).not.toBe(firstText?.trim());
+    await expect(page.locator("text=server.py")).toHaveCount(1);
+    await explorerToggle.click();
+    await expect(page.locator("text=server.py")).toHaveCount(0);
+    await explorerToggle.click();
+    await expect(page.locator("text=server.py")).toHaveCount(1);
   });
 });
 

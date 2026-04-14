@@ -15,6 +15,9 @@ The package is framework-agnostic on the React side and ships plain CSS for layo
 - Left and right sidebars with collapsible, resizable, reorderable sections
 - Bottom panel with draggable tabs and persisted active-tab state
 - Cross-container drag between sidebars, panel, and editor tabs
+- Built-in code review primitives: `CodeFileTree`, `ChangedFilesList`, `MonacoCodeViewer`, `MonacoDiffViewer`, `UnifiedDiffPreview`
+- Built-in agent trace support via `AgentTraceViewer` and `parseAgentTrace(...)`
+- Self-contained Material-style file and folder icons
 - Dark and light themes via CSS custom properties
 - TypeScript types and a Storybook demo with Playwright coverage
 
@@ -195,6 +198,20 @@ Tabs and sidebar sections accept `ReactNode` content, so in practice you usually
 - custom forms and admin panels
 
 The library handles pane layout, tabs, drag/drop, and resizing. Your app owns the actual content components.
+
+## Built-in Review Components
+
+If you want a stronger default out of the box, the package now exports a small review-oriented component set:
+
+- `CodeFileTree` for nested explorer trees with file icons, status badges, and optional drag-to-tab behavior
+- `ChangedFilesList` for compact changed-file sidebars
+- `MonacoCodeViewer` for read-only file views
+- `MonacoDiffViewer` for before/after file diffs
+- `UnifiedDiffPreview` for full unified patch inspection
+- `AgentTraceViewer` for rendered agent traces
+- `parseAgentTrace(raw)` for Claude Code, Codex CLI, OpenCode, Gemini CLI, and mini-swe-agent trace formats
+
+The flagship Storybook workbench uses these pieces together to show a realistic review surface rather than a toy fullscreen editor.
 
 ## Styling
 
