@@ -543,31 +543,31 @@ type CustomWorkspaceItem = {
 
 const customQueueItems: CustomWorkspaceItem[] = [
   {
-    id: "run:crest-alpha",
-    title: "Crest alpha rollout",
-    subtitle: "132 / 226 PASS_LEGITIMATE · crest-alpha · run_20260410_213249_94mcl2",
+    id: "run:review-candidate-a",
+    title: "Review candidate A",
+    subtitle: "Primary review candidate · ready for inspection",
     kind: "run",
     accent: "#4ec9b0",
     stage: "Ready to review",
-    summary: "High-confidence run with the strongest April 10 result. Good default entrypoint for dashboard QA.",
+    summary: "A representative review candidate used to demonstrate custom tabs, reopening by id, and drag-to-open behavior.",
   },
   {
     id: "finding:mini-swe-agent-exit",
-    title: "mini-swe-agent exit sentinel",
-    subtitle: "Prompt contract mismatch · harness regression",
+    title: "Completion sentinel fix",
+    subtitle: "Protocol mismatch · regression note",
     kind: "finding",
     accent: "#f2cc60",
     stage: "Needs follow-up",
-    summary: "The harness forced every response to include a bash call, which clobbered the native completion sentinel path.",
+    summary: "A sample engineering note showing how non-file items can open custom tabs in the workbench.",
   },
   {
     id: "artifact:k3-smoke",
-    title: "K3 smoke-check artifact",
-    subtitle: "April 11 sanity run · mini-swe-agent + Claude 4.6",
+    title: "Smoke-check artifact",
+    subtitle: "Reference artifact · validation sample",
     kind: "artifact",
     accent: "#75beff",
     stage: "Reference",
-    summary: "A compact verification artifact for the post-fix exit-path sanity pass.",
+    summary: "A lightweight artifact tab used to show alternate item kinds in the custom example.",
   },
 ];
 
@@ -575,12 +575,12 @@ const customPinnedItems: CustomWorkspaceItem[] = [
   customQueueItems[0],
   {
     id: "finding:adaptive-thinking",
-    title: "Claude 4.6 adaptive thinking note",
-    subtitle: "Benchmark interpretation · reasoning mode clarification",
+    title: "Reasoning mode note",
+    subtitle: "Interpretation note · implementation detail",
     kind: "finding",
     accent: "#c586c0",
     stage: "Pinned context",
-    summary: "Benchmark runs already used adaptive thinking for Claude 4.6; the real comparison gap is high vs max effort.",
+    summary: "A second pinned note used to demonstrate id-based tab reuse across multiple custom sidebar sections.",
   },
 ];
 

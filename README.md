@@ -63,15 +63,15 @@ type ReviewItem = {
 
 const reviewItems: ReviewItem[] = [
   {
-    id: "run:crest-alpha",
-    title: "Crest alpha rollout",
-    subtitle: "132 / 226 PASS_LEGITIMATE",
+    id: "run:review-candidate-a",
+    title: "Review candidate A",
+    subtitle: "Primary review candidate",
     summary: "Strongest local result from the April 10 runs.",
     accent: "#4ec9b0",
   },
   {
     id: "finding:exit-sentinel",
-    title: "mini-swe-agent exit sentinel",
+    title: "Completion sentinel fix",
     subtitle: "Prompt contract mismatch",
     summary: "The harness prompt clobbered the agent's native completion sentinel.",
     accent: "#f2cc60",

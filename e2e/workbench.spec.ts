@@ -131,7 +131,7 @@ test.describe("Split editor", () => {
     await page.locator(".mosaic-tabbar-split-btn").click();
 
     await expect(page.locator(".mosaic-editor-group")).toHaveCount(2);
-    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveCount(2);
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:review-candidate-a"]')).toHaveCount(2);
   });
 });
 
@@ -526,11 +526,11 @@ test.describe("Custom views", () => {
     await page.goto(CUSTOM_TABS_URL);
     await waitForStory(page);
 
-    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveCount(1);
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:review-candidate-a"]')).toHaveCount(1);
 
-    await page.locator('[data-custom-item="run:crest-alpha"]').nth(1).click();
-    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveCount(1);
-    await expect(page.locator('.mosaic-tab[data-tab-id="run:crest-alpha"]')).toHaveClass(/active/);
+    await page.locator('[data-custom-item="run:review-candidate-a"]').nth(1).click();
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:review-candidate-a"]')).toHaveCount(1);
+    await expect(page.locator('.mosaic-tab[data-tab-id="run:review-candidate-a"]')).toHaveClass(/active/);
 
     const source = page.locator('[data-custom-item="finding:mini-swe-agent-exit"]');
     const target = page.locator('.mosaic-editor-content').first();

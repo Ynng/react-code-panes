@@ -83,7 +83,7 @@ export function RunSummary() {
     <section className="summary-card">
       <header>
         <h2>Latest benchmark snapshot</h2>
-        <span className="summary-badge">K1 crest-alpha</span>
+        <span className="summary-badge">Review candidate</span>
       </header>
       <dl>
         {rows.map((row) => (
