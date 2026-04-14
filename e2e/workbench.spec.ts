@@ -4,6 +4,7 @@ const STORY_URL = "/iframe.html?id=workbench--full-workbench&viewMode=story";
 const SPLIT_URL = "/iframe.html?id=workbench--pre-split-layout&viewMode=story";
 const MANY_TABS_URL = "/iframe.html?id=workbench--many-tabs&viewMode=story";
 const CUSTOM_TABS_URL = "/iframe.html?id=workbench--custom-views-open-tabs&viewMode=story";
+const TAILWIND_URL = "/iframe.html?id=workbench--tailwind-host-app&viewMode=story";
 
 async function waitForStory(page: Page) {
   await page.waitForSelector(".mosaic-workbench", { timeout: 10000 });
@@ -540,6 +541,28 @@ test.describe("Custom views", () => {
   });
 });
 
+test.describe("Tailwind compatibility", () => {
+  test("tailwind host story opens custom tabs and keeps workbench interactions intact", async ({ page }) => {
+    await page.goto(TAILWIND_URL);
+    await waitForStory(page);
+
+    await expect(page.getByText("Wrap the workbench in a normal Tailwind app shell.")).toBeVisible();
+
+    const verifierItem = page.locator('[data-tailwind-item="tailwind:verifier-brief"]');
+    await verifierItem.click();
+    await expect(page.locator('.mosaic-tab[data-tab-id="tailwind:verifier-brief"]')).toHaveCount(1);
+    await expect(page.locator('.mosaic-tab[data-tab-id="tailwind:verifier-brief"]')).toHaveClass(/active/);
+
+    const handoffItem = page.locator('[data-tailwind-item="tailwind:handoff-notes"]');
+    await handoffItem.click();
+    await expect(page.locator('.mosaic-tab[data-tab-id="tailwind:handoff-notes"]')).toHaveCount(1);
+    await expect(page.locator('.mosaic-tab[data-tab-id="tailwind:handoff-notes"]')).toHaveClass(/active/);
+
+    await page.locator('.mosaic-tabbar-split-btn').click();
+    await expect(page.locator('.mosaic-editor-group')).toHaveCount(2);
+  });
+});
+
 test.describe("Visual regression", () => {
   test("flagship workbench stays visually stable", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
@@ -557,6 +580,17 @@ test.describe("Visual regression", () => {
     await page.goto(CUSTOM_TABS_URL);
     await waitForVisualReady(page);
     await expect(page).toHaveScreenshot('workbench-custom-tabs-story.png', {
+      fullPage: true,
+      animations: 'disabled',
+      caret: 'hide',
+    });
+  });
+
+  test("tailwind host story stays visually stable", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto(TAILWIND_URL);
+    await waitForVisualReady(page);
+    await expect(page).toHaveScreenshot('workbench-tailwind-host-story.png', {
       fullPage: true,
       animations: 'disabled',
       caret: 'hide',

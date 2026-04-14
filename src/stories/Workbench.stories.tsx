@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { CSSProperties, ReactNode, useMemo, useState } from "react";
 import "@vscode/codicons/dist/codicon.css";
+import "./tailwind-story.css";
 import type { ActivityBarItem } from "../components/ActivityBar";
 import {
   AgentTraceViewer,
@@ -969,6 +970,271 @@ function buildManyTabsState(): Partial<WorkbenchState> {
   };
 }
 
+
+type TailwindDemoItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  eyebrow: string;
+  summary: string;
+  highlights: string[];
+  accentColor: string;
+  chipClassName: string;
+};
+
+const tailwindDemoItems: TailwindDemoItem[] = [
+  {
+    id: "tailwind:release-readiness",
+    title: "Release readiness",
+    subtitle: "Tailwind card tabs with live React content",
+    eyebrow: "Launch",
+    summary:
+      "This tab is pure React content styled with Tailwind utilities while the workbench itself stays on react-code-panes primitives.",
+    highlights: ["Utility classes on tab content", "Same id reuses the open tab", "Drag the row to open it in another group"],
+    accentColor: "#34d399",
+    chipClassName: "bg-emerald-400/12 text-emerald-200 ring-1 ring-inset ring-emerald-400/30",
+  },
+  {
+    id: "tailwind:verifier-brief",
+    title: "Verifier brief",
+    subtitle: "A bounded app shell around Workbench",
+    eyebrow: "Checks",
+    summary:
+      "The host layout, hero, cards, and side content all use Tailwind. The workbench just fills a normal flex child instead of assuming full viewport ownership.",
+    highlights: ["No full-screen requirement", "Tailwind wrappers around Workbench", "Preflight disabled to avoid global collisions"],
+    accentColor: "#60a5fa",
+    chipClassName: "bg-sky-400/12 text-sky-200 ring-1 ring-inset ring-sky-400/30",
+  },
+  {
+    id: "tailwind:handoff-notes",
+    title: "Handoff notes",
+    subtitle: "Custom rows opening custom tabs",
+    eyebrow: "Docs",
+    summary:
+      "This is the same extension model as the README example direction: your own UI decides what tab to open, and the workbench only manages splits, tabs, and drag-drop.",
+    highlights: ["Custom sidebar rows", "ReactElement tab content", "No file-tree assumption in core"],
+    accentColor: "#f9a8d4",
+    chipClassName: "bg-pink-400/12 text-pink-200 ring-1 ring-inset ring-pink-400/30",
+  },
+];
+
+const makeTailwindShowcaseTab: TabFactory<TailwindDemoItem> = (item) => ({
+  id: item.id,
+  title: item.title,
+  labelColor: item.accentColor,
+  icon: <FileIcon filename={`${item.title.toLowerCase().replace(/\s+/g, "-")}.mdx`} />,
+  content: (
+    <div className="h-full overflow-auto bg-[#0f1720] text-slate-100">
+      <div className="mx-auto flex max-w-5xl flex-col gap-5 px-6 py-6">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${item.chipClassName}`}>
+              {item.eyebrow}
+            </span>
+            <span className="text-xs uppercase tracking-[0.22em] text-slate-400">tailwind host app</span>
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight text-white">{item.title}</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">{item.summary}</p>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {item.highlights.map((highlight, index) => (
+            <div key={highlight} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                0{index + 1}
+              </div>
+              <p className="text-sm font-medium leading-6 text-slate-100">{highlight}</p>
+            </div>
+          ))}
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
+          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/8 p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/80">
+              Why this story exists
+            </div>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-200">
+              <li>Use Tailwind for the host application chrome without fighting the library.</li>
+              <li>Open arbitrary React tabs from your own rows, lists, cards, or dashboards.</li>
+              <li>Keep the workbench focused on tabs, splits, sidebars, and drag-drop routing.</li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Suggested README direction</div>
+            <code className="mt-3 block whitespace-pre-wrap font-mono text-[12px] leading-6 text-slate-300">
+{`<div className="flex h-[720px] min-h-0 flex-col rounded-xl border border-zinc-800">
+  <Workbench ... />
+</div>`}
+            </code>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+});
+
+function TailwindSidebarCards({ title, items }: { title: string; items: TailwindDemoItem[] }) {
+  const { state } = useWorkbench();
+  const actions = useWorkbenchActions();
+  const activeGroupId = useActiveWorkbenchGroupId();
+
+  return (
+    <div className="flex flex-col gap-2 p-2">
+      <div className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{title}</div>
+      {items.map((item) => {
+        const isActive = state.groups[activeGroupId]?.activeTabId === item.id;
+        const tab = makeTailwindShowcaseTab(item);
+        return (
+          <button
+            key={item.id}
+            type="button"
+            data-tailwind-item={item.id}
+            draggable
+            onClick={() => actions.activateOrOpenTab(activeGroupId, tab)}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = "copy";
+              event.dataTransfer.setData(DRAG_TYPE, item.id);
+              setDragTab(tab);
+            }}
+            onDragEnd={() => clearDragTab()}
+            className={`group flex w-full flex-col gap-2 rounded-lg border px-3 py-3 text-left transition ${
+              isActive
+                ? "border-emerald-400/40 bg-emerald-400/10 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.08)]"
+                : "border-white/5 bg-white/[0.03] hover:border-white/10 hover:bg-white/[0.05]"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                  style={{ background: item.accentColor }}
+                />
+                <span className="truncate text-[13px] font-semibold text-zinc-100">{item.title}</span>
+              </div>
+              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${item.chipClassName}`}>
+                {item.eyebrow}
+              </span>
+            </div>
+            <p className="text-xs leading-5 text-zinc-400">{item.subtitle}</p>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function TailwindHostWorkbench() {
+  const initialState: Partial<WorkbenchState> = {
+    splitTree: createLeaf("tailwind-main"),
+    activeGroupId: "tailwind-main",
+    groups: {
+      "tailwind-main": {
+        tabs: [
+          makeTailwindShowcaseTab(tailwindDemoItems[0]),
+          createCodeTab("App.tsx"),
+          createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx"),
+          createTraceTab("atif-gemini-cli-3.1-pro.trajectory.json"),
+        ],
+        activeTabId: tailwindDemoItems[0].id,
+        mruOrder: [
+          tailwindDemoItems[0].id,
+          "App.tsx",
+          "dashboard/src/components/AgentTraceViewer.tsx.diff",
+          "atif-gemini-cli-3.1-pro.trajectory.json",
+        ],
+      },
+    },
+  };
+
+  const leftSections: SidebarSection[] = [
+    {
+      id: "tailwind-launchpad",
+      title: "Launchpad",
+      content: <TailwindSidebarCards title="Tailwind cards" items={tailwindDemoItems} />,
+      headerActions: <SectionActionLabel>utility classes outside core</SectionActionLabel>,
+    },
+    {
+      id: "explorer",
+      title: "Explorer",
+      content: <ExplorerSection />,
+      headerActions: <SectionActionLabel>library tree stays unchanged</SectionActionLabel>,
+    },
+  ];
+
+  const rightSections: SidebarSection[] = [
+    {
+      id: "tailwind-notes",
+      title: "Integration Notes",
+      content: (
+        <div className="flex flex-col gap-3 p-3 text-sm text-zinc-300">
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Tailwind setup</div>
+            <p className="mt-2 leading-6 text-zinc-300">
+              This story imports Tailwind only for Storybook, with preflight disabled so utility classes can sit next to the library CSS without resetting everything.
+            </p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">What to copy later</div>
+            <p className="mt-2 leading-6 text-zinc-300">
+              A normal app shell, a bounded workbench container, and your own item-to-tab factories. No full-screen requirement, no Tailwind dependency inside the library runtime.
+            </p>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const panelTabs: PanelTab[] = [
+    {
+      id: "tailwind-checks",
+      title: "Checks",
+      content: (
+        <div className="h-full overflow-auto bg-[#111111] p-4 font-mono text-[12px] leading-6 text-zinc-300">
+          <div>tailwind host shell renders around workbench</div>
+          <div>custom rows open React tabs by stable id</div>
+          <div>library viewers still coexist with utility-class content</div>
+        </div>
+      ),
+    },
+    { id: "output", title: "Output", content: <OutputPanel /> },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(20,184,166,0.12),_transparent_28%),linear-gradient(180deg,_#09090b_0%,_#111111_100%)] px-6 py-6 text-zinc-100">
+      <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-teal-200/70">Tailwind compatibility</div>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">Wrap the workbench in a normal Tailwind app shell.</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-300">
+              This story proves the library can live inside a utility-class layout, open custom React tabs from your own UI, and still keep Monaco, diff, and trace viewers working in the same workspace.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/80">Host layout</div>
+              <p className="mt-2 text-sm leading-6 text-zinc-100">The workbench sits inside a bounded `h-[820px]` card, not a viewport-filling demo shell.</p>
+            </div>
+            <div className="rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200/80">Open semantics</div>
+              <p className="mt-2 text-sm leading-6 text-zinc-100">Tailwind buttons produce tabs; react-code-panes just handles activation, splitting, and drag-drop.</p>
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-[#1e1e1e] shadow-[0_22px_70px_rgba(0,0,0,0.35)]">
+          <div className="h-[820px]">
+            <Workbench
+              initialState={initialState}
+              activityBar={{ items: [{ id: "tailwind", title: "Tailwind", icon: <ExplorerIcon /> }] }}
+              leftSidebar={{ sections: leftSections, defaultWidth: 310, minWidth: 240 }}
+              rightSidebar={{ sections: rightSections, defaultWidth: 320, minWidth: 240 }}
+              panel={{ tabs: panelTabs, defaultHeight: 160, minHeight: 96 }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const meta = {
   title: "Workbench",
   component: Workbench,
@@ -995,4 +1261,8 @@ export const ManyTabs: Story = {
 
 export const CustomViewsOpenTabs: Story = {
   render: () => <CustomViewsWorkbench />,
+};
+
+export const TailwindHostApp: Story = {
+  render: () => <TailwindHostWorkbench />,
 };
