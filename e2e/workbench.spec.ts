@@ -349,6 +349,22 @@ test.describe("Sidebar sections", () => {
     await explorerToggle.click();
     await expect(page.locator("text=server.py")).toHaveCount(1);
   });
+
+  test("source control header buttons switch between list and tree view", async ({ page }) => {
+    await page.goto(STORY_URL);
+    await waitForStory(page);
+
+    const leftSidebar = page.locator('.mosaic-sidebar[data-side="left"]');
+    const sourceControlSection = leftSidebar.locator(".mosaic-sidebar-section").nth(1);
+    await expect(sourceControlSection.getByText("dashboard/src/components/AgentTraceViewer.tsx")).toBeVisible();
+
+    await leftSidebar.getByRole("button", { name: "Tree View" }).click();
+    await expect(sourceControlSection.getByText(/^dashboard$/)).toBeVisible();
+
+    await leftSidebar.getByRole("button", { name: "List View" }).click();
+    await expect(sourceControlSection.getByText(/^dashboard$/)).toHaveCount(0);
+    await expect(sourceControlSection.getByText("dashboard/src/components/AgentTraceViewer.tsx")).toBeVisible();
+  });
 });
 
 test.describe("Cross-container drag", () => {

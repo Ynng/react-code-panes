@@ -15,6 +15,26 @@ const LEFT_CONTAINER = "sidebar-left";
 const RIGHT_CONTAINER = "sidebar-right";
 const PANEL_CONTAINER = "panel";
 
+function mergeSections(prev: SidebarSection[], next: SidebarSection[]) {
+  const nextById = new Map(next.map((section) => [section.id, section]));
+  const retainedIds = prev.map((section) => section.id).filter((id) => nextById.has(id));
+  const appendedIds = next.map((section) => section.id).filter((id) => !retainedIds.includes(id));
+  const orderedIds = [...retainedIds, ...appendedIds];
+
+  return orderedIds
+    .map((id) => {
+      const incoming = nextById.get(id);
+      if (!incoming) return null;
+      const existing = prev.find((section) => section.id === id);
+      if (!existing) return incoming;
+      return {
+        ...incoming,
+        isCollapsed: existing.isCollapsed,
+      };
+    })
+    .filter((section): section is SidebarSection => section !== null);
+}
+
 interface WorkbenchInnerProps {
   leftSidebar?: SidebarConfig & { title?: string };
   rightSidebar?: SidebarConfig & { title?: string };
@@ -47,6 +67,14 @@ function WorkbenchInner({
   const [panelActiveTabId, setPanelActiveTabId] = useState<string>(
     panelProp?.tabs[0]?.id ?? ""
   );
+
+  useEffect(() => {
+    setLeftSections((prev) => mergeSections(prev, leftSidebarProp?.sections ?? []));
+  }, [leftSidebarProp?.sections]);
+
+  useEffect(() => {
+    setRightSections((prev) => mergeSections(prev, rightSidebarProp?.sections ?? []));
+  }, [rightSidebarProp?.sections]);
 
   // ── Visibility & sizing ───────────────────────────────────
 

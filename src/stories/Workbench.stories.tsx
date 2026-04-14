@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { CSSProperties, ReactNode, useMemo, useState } from "react";
+import "@vscode/codicons/dist/codicon.css";
 import type { ActivityBarItem } from "../components/ActivityBar";
 import {
   AgentTraceViewer,
@@ -113,44 +114,16 @@ function SectionActionLabel({ children }: { children: ReactNode }) {
   );
 }
 
-function TreeViewIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M2.75 3.25H7.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M2.75 8H5.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M2.75 12.75H5.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M8.5 3.25H12.5V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M6.75 8H11.25V12.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M6.75 12.75H12.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <circle cx="12.75" cy="7.75" r=".9" fill="currentColor" />
-      <circle cx="12.75" cy="12.75" r=".9" fill="currentColor" />
-    </svg>
-  );
-}
-
-function ListViewIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="3" cy="4" r=".9" fill="currentColor" />
-      <circle cx="3" cy="8" r=".9" fill="currentColor" />
-      <circle cx="3" cy="12" r=".9" fill="currentColor" />
-      <path d="M5.25 4H13.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M5.25 8H13.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M5.25 12H13.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function HeaderIconButton({
   active,
   title,
   onClick,
-  children,
+  iconClass,
 }: {
   active?: boolean;
   title: string;
   onClick: () => void;
-  children: ReactNode;
+  iconClass: string;
 }) {
   return (
     <button
@@ -158,6 +131,10 @@ function HeaderIconButton({
       title={title}
       aria-label={title}
       onClick={onClick}
+      draggable={false}
+      onMouseDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      onDragStart={(event) => event.preventDefault()}
       style={{
         width: 22,
         height: 22,
@@ -166,13 +143,13 @@ function HeaderIconButton({
         justifyContent: "center",
         border: "none",
         borderRadius: 3,
-        background: active ? "rgba(255, 255, 255, 0.1)" : "transparent",
+        background: active ? "rgba(255, 255, 255, 0.08)" : "transparent",
         color: active ? "var(--mosaic-sidebar-fg)" : "var(--mosaic-sidebar-header-fg)",
         cursor: "pointer",
         padding: 0,
       }}
     >
-      {children}
+      <span className={`codicon ${iconClass}`} style={{ fontSize: 14, lineHeight: 1 }} />
     </button>
   );
 }
@@ -547,16 +524,14 @@ function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchStat
             title="Tree View"
             active={sourceControlViewMode === "tree"}
             onClick={() => setSourceControlViewMode("tree")}
-          >
-            <TreeViewIcon />
-          </HeaderIconButton>
+            iconClass="codicon-list-tree"
+          />
           <HeaderIconButton
             title="List View"
             active={sourceControlViewMode === "list"}
             onClick={() => setSourceControlViewMode("list")}
-          >
-            <ListViewIcon />
-          </HeaderIconButton>
+            iconClass="codicon-list-flat"
+          />
         </div>
       ),
     },

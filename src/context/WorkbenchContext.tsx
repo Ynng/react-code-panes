@@ -1,5 +1,7 @@
 import {
   createContext,
+  cloneElement,
+  isValidElement,
   useContext,
   useCallback,
   useReducer,
@@ -49,6 +51,13 @@ function createEmptyGroup(): EditorGroupState {
 
 function updateMru(mru: string[], tabId: string): string[] {
   return [tabId, ...mru.filter((id) => id !== tabId)];
+}
+
+function cloneTabForSplit(tab: Tab): Tab {
+  return {
+    ...tab,
+    content: isValidElement(tab.content) ? cloneElement(tab.content) : tab.content,
+  };
 }
 
 function reducer(state: WorkbenchState, action: Action): WorkbenchState {
@@ -465,6 +474,7 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
       if (!group) return state;
       const tab = group.tabs.find((candidate) => candidate.id === action.tabId);
       if (!tab) return state;
+      const duplicatedTab = cloneTabForSplit(tab);
 
       const newGroupId = generateGroupId();
       const newTree = simplifyTree(
@@ -476,9 +486,9 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
         groups: {
           ...state.groups,
           [newGroupId]: {
-            tabs: [tab],
-            activeTabId: tab.id,
-            mruOrder: [tab.id],
+            tabs: [duplicatedTab],
+            activeTabId: duplicatedTab.id,
+            mruOrder: [duplicatedTab.id],
           },
         },
         activeGroupId: newGroupId,
