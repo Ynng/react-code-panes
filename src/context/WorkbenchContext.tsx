@@ -56,7 +56,9 @@ function updateMru(mru: string[], tabId: string): string[] {
 function cloneTabForSplit(tab: Tab): Tab {
   return {
     ...tab,
-    content: isValidElement(tab.content) ? cloneElement(tab.content) : tab.content,
+    content: isValidElement(tab.content)
+      ? cloneElement(tab.content, { key: `${tab.id}__split_clone` })
+      : tab.content,
   };
 }
 

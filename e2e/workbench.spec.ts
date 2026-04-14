@@ -356,14 +356,14 @@ test.describe("Sidebar sections", () => {
 
     const leftSidebar = page.locator('.mosaic-sidebar[data-side="left"]');
     const sourceControlSection = leftSidebar.locator(".mosaic-sidebar-section").nth(1);
-    await expect(sourceControlSection.getByText("dashboard/src/components/AgentTraceViewer.tsx")).toBeVisible();
+    await expect(sourceControlSection.getByText("AgentTraceViewer.tsx")).toBeVisible();
 
     await leftSidebar.getByRole("button", { name: "Tree View" }).click();
     await expect(sourceControlSection.getByText(/^dashboard$/)).toBeVisible();
 
     await leftSidebar.getByRole("button", { name: "List View" }).click();
     await expect(sourceControlSection.getByText(/^dashboard$/)).toHaveCount(0);
-    await expect(sourceControlSection.getByText("dashboard/src/components/AgentTraceViewer.tsx")).toBeVisible();
+    await expect(sourceControlSection.getByText("AgentTraceViewer.tsx")).toBeVisible();
   });
 });
 
@@ -494,5 +494,31 @@ test.describe("Drag tab to split", () => {
     await source.dragTo(target);
 
     await expect(page.locator('.mosaic-tab[data-tab-id="server.py"]')).toHaveCount(1);
+  });
+
+  test("dragging a changed file opens the original file while clicking opens the diff", async ({ page }) => {
+    await page.goto(STORY_URL);
+    await waitForStory(page);
+
+    const sourceControlSection = page
+      .locator('.mosaic-sidebar[data-side="left"] .mosaic-sidebar-section')
+      .nth(1);
+
+    await sourceControlSection.getByText("AgentTraceViewer.tsx").click();
+    await expect(
+      page.locator('.mosaic-tab[data-tab-id="dashboard/src/components/AgentTraceViewer.tsx.diff"]'),
+    ).toHaveCount(1);
+    await expect(
+      page.locator('.mosaic-tab[data-tab-id="dashboard/src/components/AgentTraceViewer.tsx.diff"]'),
+    ).toContainText("M AgentTraceViewer.tsx (Diff)");
+
+    const changedFileRow = sourceControlSection.getByText("FileTree.tsx").locator("..");
+    const target = page.locator(".mosaic-editor-content").first();
+
+    await changedFileRow.dragTo(target);
+
+    await expect(page.locator('.mosaic-tab[data-tab-id="FileTree.tsx"]')).toHaveCount(1);
+    await expect(page.locator('.mosaic-tab[data-tab-id="FileTree.tsx"]')).toContainText("FileTree.tsx");
+    await expect(page.locator('.mosaic-tab[data-tab-id="FileTree.tsx"]')).not.toContainText("Diff");
   });
 });

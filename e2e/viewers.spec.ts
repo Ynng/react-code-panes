@@ -12,10 +12,11 @@ test.describe("Flagship workbench viewers", () => {
     await page.goto(WORKBENCH_URL);
     await waitForWorkbench(page);
 
-    await page
-      .locator('.mosaic-sidebar[data-side="left"]')
-      .locator("text=dashboard/src/components/AgentTraceViewer.tsx")
-      .click();
+    const sourceControlSection = page
+      .locator('.mosaic-sidebar[data-side="left"] .mosaic-sidebar-section')
+      .nth(1);
+
+    await sourceControlSection.getByText("AgentTraceViewer.tsx").click();
 
     await expect(
       page.locator(

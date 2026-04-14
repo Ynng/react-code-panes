@@ -9,6 +9,8 @@ import {
   CodeFileTreeItem,
   EditorBreadcrumb,
   FileIcon,
+  getStatusColor,
+  getStatusLetter,
   MonacoCodeViewer,
   MonacoDiffViewer,
   PanelTab,
@@ -154,20 +156,37 @@ function HeaderIconButton({
   );
 }
 
-function createCodeTab(fileId: string): Tab {
+function getChangedStatusColor(status?: "added" | "deleted" | "modified" | "renamed") {
+  return status ? getStatusColor(status) : undefined;
+}
+
+function getChangedFileDiffTitle(path: string, status?: "added" | "deleted" | "modified" | "renamed") {
+  const name = basename(path);
+  const letter = status ? getStatusLetter(status) : "";
+  return letter ? `${letter} ${name} (Diff)` : `${name} (Diff)`;
+}
+
+function createCodeTab(
+  fileId: string,
+  options?: {
+    title?: string;
+    labelColor?: string;
+  },
+): Tab {
   const file = getExampleFileById(fileId);
   if (!file) {
     return {
       id: fileId,
-      title: fileId,
+      title: options?.title ?? fileId,
       content: <div style={{ padding: 16 }}>Missing example file: {fileId}</div>,
     };
   }
 
   return {
     id: file.id,
-    title: file.id,
+    title: options?.title ?? file.id,
     icon: <FileIcon filename={file.id} />,
+    labelColor: options?.labelColor,
     content: (
       <EditorBreadcrumb filePath={file.path}>
         <MonacoCodeViewer value={file.content} language={file.language} path={file.path} />
@@ -203,9 +222,9 @@ function createDiffFileTab(path: string): Tab {
 
   return {
     id: `${path}.diff`,
-    title,
+    title: getChangedFileDiffTitle(path, diffFile.status),
     icon: <FileIcon filename={title} />,
-    labelColor: "#e2c08d",
+    labelColor: getChangedStatusColor(diffFile.status),
     content: (
       <EditorBreadcrumb filePath={path}>
         <MonacoDiffViewer
@@ -289,7 +308,9 @@ function SourceControlSection({ viewMode }: { viewMode: "list" | "tree" }) {
   const actions = useWorkbenchActions();
   const activeGroupId = state.activeGroupId ?? Object.keys(state.groups)[0];
   const activeTabId = findActiveTabId(state);
-  const selectedPath = activeTabId?.endsWith(".diff") ? activeTabId.slice(0, -5) : null;
+  const selectedPath = activeTabId?.endsWith(".diff")
+    ? activeTabId.slice(0, -5)
+    : getExampleFileById(activeTabId ?? "")?.path ?? null;
 
   const treeItems = useMemo(() => {
     type Node = CodeFileTreeItem & { childrenMap?: Map<string, Node> };
@@ -360,6 +381,14 @@ function SourceControlSection({ viewMode }: { viewMode: "list" | "tree" }) {
           onSelectFile={(file) => {
             if (!activeGroupId) return;
             actions.activateOrOpenTab(activeGroupId, createDiffFileTab(file.path));
+          }}
+          getDragTab={(file) => {
+            const sourceFile = getExampleFileByPath(file.path);
+            if (!sourceFile) return null;
+            return createCodeTab(sourceFile.id, {
+              title: basename(file.path),
+              labelColor: getChangedStatusColor(file.status),
+            });
           }}
         />
       ) : (
