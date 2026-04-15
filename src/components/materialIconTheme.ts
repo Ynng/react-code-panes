@@ -1,54 +1,241 @@
+/**
+ * Icon mappings and SVG data sourced directly from the material-icon-theme npm
+ * package (https://npmjs.com/package/material-icon-theme).
+ *
+ * Mapping tables below are a curated subset of the full manifest located at
+ * material-icon-theme/dist/material-icons.json.  To add a new file type or
+ * folder, find its icon ID in the manifest and add the corresponding import.
+ */
+
+// ---------------------------------------------------------------------------
+// SVG imports — bundled as data-URIs by tsup (esbuild) / Vite
+// ---------------------------------------------------------------------------
+
+// File icons
+import consoleSvg from "material-icon-theme/icons/console.svg";
+import cssSvg from "material-icon-theme/icons/css.svg";
+import databaseSvg from "material-icon-theme/icons/database.svg";
+import dockerSvg from "material-icon-theme/icons/docker.svg";
+import documentSvg from "material-icon-theme/icons/document.svg";
+import fileSvg from "material-icon-theme/icons/file.svg";
+import gitSvg from "material-icon-theme/icons/git.svg";
+import goSvg from "material-icon-theme/icons/go.svg";
+import htmlSvg from "material-icon-theme/icons/html.svg";
+import imageSvg from "material-icon-theme/icons/image.svg";
+import javascriptSvg from "material-icon-theme/icons/javascript.svg";
+import jsonSvg from "material-icon-theme/icons/json.svg";
+import licenseSvg from "material-icon-theme/icons/license.svg";
+import lockSvg from "material-icon-theme/icons/lock.svg";
+import logSvg from "material-icon-theme/icons/log.svg";
+import makefileSvg from "material-icon-theme/icons/makefile.svg";
+import markdownSvg from "material-icon-theme/icons/markdown.svg";
+import mdxSvg from "material-icon-theme/icons/mdx.svg";
+import nodejsSvg from "material-icon-theme/icons/nodejs.svg";
+import playwrightSvg from "material-icon-theme/icons/playwright.svg";
+import pnpmSvg from "material-icon-theme/icons/pnpm.svg";
+import pythonSvg from "material-icon-theme/icons/python.svg";
+import reactSvg from "material-icon-theme/icons/react.svg";
+import reactTsSvg from "material-icon-theme/icons/react_ts.svg";
+import readmeSvg from "material-icon-theme/icons/readme.svg";
+import rustSvg from "material-icon-theme/icons/rust.svg";
+import sassSvg from "material-icon-theme/icons/sass.svg";
+import svgIconSvg from "material-icon-theme/icons/svg.svg";
+import tomlSvg from "material-icon-theme/icons/toml.svg";
+import tsconfigSvg from "material-icon-theme/icons/tsconfig.svg";
+import viteSvg from "material-icon-theme/icons/vite.svg";
+import xmlSvg from "material-icon-theme/icons/xml.svg";
+import yarnSvg from "material-icon-theme/icons/yarn.svg";
+
+// Folder icons (closed)
+import folderSvg from "material-icon-theme/icons/folder.svg";
+import folderComponentsSvg from "material-icon-theme/icons/folder-components.svg";
+import folderCoverageSvg from "material-icon-theme/icons/folder-coverage.svg";
+import folderCssSvg from "material-icon-theme/icons/folder-css.svg";
+import folderDistSvg from "material-icon-theme/icons/folder-dist.svg";
+import folderDocsSvg from "material-icon-theme/icons/folder-docs.svg";
+import folderImagesSvg from "material-icon-theme/icons/folder-images.svg";
+import folderMockSvg from "material-icon-theme/icons/folder-mock.svg";
+import folderScriptsSvg from "material-icon-theme/icons/folder-scripts.svg";
+import folderSrcSvg from "material-icon-theme/icons/folder-src.svg";
+import folderStorybookSvg from "material-icon-theme/icons/folder-storybook.svg";
+import folderTestSvg from "material-icon-theme/icons/folder-test.svg";
+
+// Folder icons (open)
+import folderOpenSvg from "material-icon-theme/icons/folder-open.svg";
+import folderComponentsOpenSvg from "material-icon-theme/icons/folder-components-open.svg";
+import folderCoverageOpenSvg from "material-icon-theme/icons/folder-coverage-open.svg";
+import folderCssOpenSvg from "material-icon-theme/icons/folder-css-open.svg";
+import folderDistOpenSvg from "material-icon-theme/icons/folder-dist-open.svg";
+import folderDocsOpenSvg from "material-icon-theme/icons/folder-docs-open.svg";
+import folderImagesOpenSvg from "material-icon-theme/icons/folder-images-open.svg";
+import folderMockOpenSvg from "material-icon-theme/icons/folder-mock-open.svg";
+import folderScriptsOpenSvg from "material-icon-theme/icons/folder-scripts-open.svg";
+import folderSrcOpenSvg from "material-icon-theme/icons/folder-src-open.svg";
+import folderStorybookOpenSvg from "material-icon-theme/icons/folder-storybook-open.svg";
+import folderTestOpenSvg from "material-icon-theme/icons/folder-test-open.svg";
+
+// ---------------------------------------------------------------------------
+// Defaults
+// ---------------------------------------------------------------------------
+
+export const MATERIAL_DEFAULT_FILE_ICON_ID = "file";
+export const MATERIAL_DEFAULT_FOLDER_ICON_ID = "folder";
+export const MATERIAL_DEFAULT_FOLDER_EXPANDED_ICON_ID = "folder-open";
+
+// ---------------------------------------------------------------------------
+// Mapping tables (curated subset of material-icons.json manifest)
+// ---------------------------------------------------------------------------
+
+export const MATERIAL_FILE_EXTENSION_ICON_IDS = {
+  bash: "console",
+  css: "css",
+  gif: "image",
+  go: "go",
+  htm: "html",
+  jpeg: "image",
+  jpg: "image",
+  json: "json",
+  jsonl: "json",
+  jsx: "react",
+  lock: "lock",
+  log: "log",
+  md: "markdown",
+  mdx: "mdx",
+  mjs: "javascript",
+  patch: "git",
+  png: "image",
+  py: "python",
+  rs: "rust",
+  scss: "sass",
+  sh: "console",
+  sql: "database",
+  svg: "svg",
+  toml: "toml",
+  tsx: "react_ts",
+  txt: "document",
+  webp: "image",
+  xml: "xml",
+  zsh: "console",
+} as const;
+
+export const MATERIAL_FILE_NAME_ICON_IDS = {
+  ".gitignore": "git",
+  dockerfile: "docker",
+  license: "license",
+  makefile: "makefile",
+  "package-lock.json": "nodejs",
+  "package.json": "nodejs",
+  "playwright.config.ts": "playwright",
+  "pnpm-lock.yaml": "pnpm",
+  "readme.md": "readme",
+  "tsconfig.json": "tsconfig",
+  "vite.config.ts": "vite",
+  "yarn.lock": "yarn",
+} as const;
+
+export const MATERIAL_FOLDER_ICON_IDS = {
+  ".storybook": "folder-storybook",
+  components: "folder-components",
+  coverage: "folder-coverage",
+  docs: "folder-docs",
+  fixtures: "folder-mock",
+  icons: "folder-images",
+  images: "folder-images",
+  output: "folder-dist",
+  scripts: "folder-scripts",
+  src: "folder-src",
+  stories: "folder-storybook",
+  storybook: "folder-storybook",
+  styles: "folder-css",
+  test: "folder-test",
+  tests: "folder-test",
+} as const;
+
+export const MATERIAL_FOLDER_EXPANDED_ICON_IDS = {
+  ".storybook": "folder-storybook-open",
+  components: "folder-components-open",
+  coverage: "folder-coverage-open",
+  docs: "folder-docs-open",
+  fixtures: "folder-mock-open",
+  icons: "folder-images-open",
+  images: "folder-images-open",
+  output: "folder-dist-open",
+  scripts: "folder-scripts-open",
+  src: "folder-src-open",
+  stories: "folder-storybook-open",
+  storybook: "folder-storybook-open",
+  styles: "folder-css-open",
+  test: "folder-test-open",
+  tests: "folder-test-open",
+} as const;
+
+// ---------------------------------------------------------------------------
+// Icon data — maps icon ID → SVG URL (data-URI in library build, asset URL
+// in dev/Storybook).  FileIcon and FolderIcon components use this to render
+// <img> elements.
+// ---------------------------------------------------------------------------
+
 export const MATERIAL_ICON_DATA: Record<string, string> = {
-  document:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIvPjxwYXRoIGZpbGw9IiM0MmE1ZjUiIGQ9Ik04IDE2aDh2Mkg4em0wLTRoOHYySDh6bTYtMTBINmMtMS4xIDAtMiAuOS0yIDJ2MTZjMCAxLjEuODkgMiAxLjk5IDJIMThjMS4xIDAgMi0uOSAyLTJWOHptNCAxOEg2VjRoN3Y1aDV6Ii8+PC9zdmc+",
-  folder:
-    "data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTYgMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0ibTYuOTIyIDMuNzY4LS42NDQtLjUzNkExIDEgMCAwIDAgNS42MzggM0gyYTEgMSAwIDAgMC0xIDF2OGExIDEgMCAwIDAgMSAxaDEyYTEgMSAwIDAgMCAxLTFWNWExIDEgMCAwIDAtMS0xSDcuNTYyYTEgMSAwIDAgMS0uNjQtLjIzMiIgZmlsbD0iIzkwYTRhZSIgLz48L3N2Zz4=",
-  "folder-open":
-    "data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTYgMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTE0LjQ4MyA2SDQuNzIxYTEgMSAwIDAgMC0uOTQ5LjY4NEwyIDEyVjVoMTJhMSAxIDAgMCAwLTEtMUg3LjU2MmExIDEgMCAwIDEtLjY0LS4yMzJsLS42NDQtLjUzNkExIDEgMCAwIDAgNS42MzggM0gyYTEgMSAwIDAgMC0xIDF2OGExIDEgMCAwIDAgMSAxaDExbDIuNDAzLTUuNjA2QTEgMSAwIDAgMCAxNC40ODMgNiIgZmlsbD0iIzkwYTRhZSIgLz48L3N2Zz4=",
-  typescript:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZmlsbD0iIzAyODhkMSIgZD0iTTIgMnYxMmgxMlYyem00IDZoM3YxSDh2NEg3VjlINnptNSAwaDJ2MWgtMnYxaDFhMS4wMDMgMS4wMDMgMCAwIDEgMSAxdjFhMS4wMDMgMS4wMDMgMCAwIDEtMSAxaC0ydi0xaDJ2LTFoLTFhMS4wMDMgMS4wMDMgMCAwIDEtMS0xVjlhMS4wMDMgMS4wMDMgMCAwIDEgMS0xIi8+PC9zdmc+",
-  react_ts:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAyODhkMSIgZD0iTTE2IDEyYzcuNDQ0IDAgMTIgMi41OSAxMiA0cy00LjU1NiA0LTEyIDQtMTItMi41OS0xMi00IDQuNTU2LTQgMTItNG0wLTJjLTcuNzMyIDAtMTQgMi42ODYtMTQgNnM2LjI2OCA2IDE0IDYgMTQtMi42ODYgMTQtNi02LjI2OC02LTE0LTYiLz48cGF0aCBmaWxsPSIjMDI4OGQxIiBkPSJNMTYgMTRhMiAyIDAgMSAwIDIgMiAyIDIgMCAwIDAtMi0yIi8+PHBhdGggZmlsbD0iIzAyODhkMSIgZD0iTTEwLjQ1OCA1LjUwN2MyLjAxNyAwIDUuOTM3IDMuMTc3IDkuMDA2IDguNDkzIDMuNzIyIDYuNDQ3IDMuNzU3IDExLjY4NyAyLjUzNiAxMi4zOTJhLjkuOSAwIDAgMS0uNDU3LjFjLTIuMDE3IDAtNS45MzgtMy4xNzYtOS4wMDctOC40OTJDOC44MTQgMTEuNTUzIDguNzc5IDYuMzEzIDEwIDUuNjA4YS45LjkgMCAwIDEgLjQ1OC0uMW0tLjAwMS0yQTIuODcgMi44NyAwIDAgMCA5IDMuODc1QzYuMTMgNS41MzIgNi45MzggMTIuMzA0IDEwLjgwNCAxOWMzLjI4NCA1LjY5IDcuNzIgOS40OTMgMTAuNzQgOS40OTNBMi44NyAyLjg3IDAgMCAwIDIzIDI4LjEyNGMyLjg3LTEuNjU2IDIuMDYyLTguNDI4LTEuODA0LTE1LjEyNC0zLjI4NC01LjY5LTcuNzItOS40OTMtMTAuNzQtOS40OTNaIi8+PHBhdGggZmlsbD0iIzAyODhkMSIgZD0iTTIxLjU0MyA1LjUwN2EuOS45IDAgMCAxIC40NTcuMWMxLjIyMS43MDYgMS4xODYgNS45NDYtMi41MzYgMTIuMzkzLTMuMDcgNS4zMTYtNi45OSA4LjQ5My05LjAwNyA4LjQ5M2EuOS45IDAgMCAxLS40NTctLjFDOC43NzkgMjUuNjg2IDguODE0IDIwLjQ0NiAxMi41MzYgMTRjMy4wNy01LjMxNiA2Ljk5LTguNDkzIDkuMDA3LTguNDkzbTAtMmMtMy4wMiAwLTcuNDU1IDMuODA0LTEwLjc0IDkuNDkzQzYuOTM5IDE5LjY5NiA2LjEzIDI2LjQ2OCA5IDI4LjEyNGEyLjg3IDIuODcgMCAwIDAgMS40NTcuMzY5YzMuMDIgMCA3LjQ1NS0zLjgwNCAxMC43NC05LjQ5M0MyNS4wNjEgMTIuMzA0IDI1Ljg3IDUuNTMyIDIzIDMuODc2YTIuODcgMi44NyAwIDAgMC0xLjQ1Ny0uMzY5Ii8+PC9zdmc+",
-  react:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwYmNkNCIgZD0iTTE2IDEyYzcuNDQ0IDAgMTIgMi41OSAxMiA0cy00LjU1NiA0LTEyIDQtMTItMi41OS0xMi00IDQuNTU2LTQgMTItNG0wLTJjLTcuNzMyIDAtMTQgMi42ODYtMTQgNnM2LjI2OCA2IDE0IDYgMTQtMi42ODYgMTQtNi02LjI2OC02LTE0LTYiLz48cGF0aCBmaWxsPSIjMDBiY2Q0IiBkPSJNMTYgMTRhMiAyIDAgMSAwIDIgMiAyIDIgMCAwIDAtMi0yIi8+PHBhdGggZmlsbD0iIzAwYmNkNCIgZD0iTTEwLjQ1OCA1LjUwN2MyLjAxNyAwIDUuOTM3IDMuMTc3IDkuMDA2IDguNDkzIDMuNzIyIDYuNDQ3IDMuNzU3IDExLjY4NyAyLjUzNiAxMi4zOTJhLjkuOSAwIDAgMS0uNDU3LjFjLTIuMDE3IDAtNS45MzgtMy4xNzYtOS4wMDctOC40OTJDOC44MTQgMTEuNTUzIDguNzc5IDYuMzEzIDEwIDUuNjA4YS45LjkgMCAwIDEgLjQ1OC0uMW0tLjAwMS0yQTIuODcgMi44NyAwIDAgMCA5IDMuODc1QzYuMTMgNS41MzIgNi45MzggMTIuMzA0IDEwLjgwNCAxOWMzLjI4NCA1LjY5IDcuNzIgOS40OTMgMTAuNzQgOS40OTNBMi44NyAyLjg3IDAgMCAwIDIzIDI4LjEyNGMyLjg3LTEuNjU2IDIuMDYyLTguNDI4LTEuODA0LTE1LjEyNC0zLjI4NC01LjY5LTcuNzItOS40OTMtMTAuNzQtOS40OTNaIi8+PHBhdGggZmlsbD0iIzAwYmNkNCIgZD0iTTIxLjU0MyA1LjUwN2EuOS45IDAgMCAxIC40NTcuMWMxLjIyMS43MDYgMS4xODYgNS45NDYtMi41MzYgMTIuMzkzLTMuMDcgNS4zMTYtNi45OSA4LjQ5My05LjAwNyA4LjQ5M2EuOS45IDAgMCAxLS40NTctLjFDOC43NzkgMjUuNjg2IDguODE0IDIwLjQ0NiAxMi41MzYgMTRjMy4wNy01LjMxNiA2Ljk5LTguNDkzIDkuMDA3LTguNDkzbTAtMmMtMy4wMiAwLTcuNDU1IDMuODA0LTEwLjc0IDkuNDkzQzYuOTM5IDE5LjY5NiA2LjEzIDI2LjQ2OCA5IDI4LjEyNGEyLjg3IDIuODcgMCAwIDAgMS40NTcuMzY5YzMuMDIgMCA3LjQ1NS0zLjgwNCAxMC43NC05LjQ5M0MyNS4wNjEgMTIuMzA0IDI1Ljg3IDUuNTMyIDIzIDMuODc2YTIuODcgMi44NyAwIDAgMC0xLjQ1Ny0uMzY5Ii8+PC9zdmc+",
-  javascript:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZmlsbD0iI2ZmY2EyOCIgZD0iTTIgMnYxMmgxMlYyem02IDZoMXY0YTEuMDAzIDEuMDAzIDAgMCAxLTEgMUg3YTEuMDAzIDEuMDAzIDAgMCAxLTEtMXYtMWgxdjFoMXptMyAwaDJ2MWgtMnYxaDFhMS4wMDMgMS4wMDMgMCAwIDEgMSAxdjFhMS4wMDMgMS4wMDMgMCAwIDEtMSAxaC0ydi0xaDJ2LTFoLTFhMS4wMDMgMS4wMDMgMCAwIDEtMS0xVjlhMS4wMDMgMS4wMDMgMCAwIDEgMS0xIi8+PC9zdmc+",
-  python:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzAyODhkMSIgZD0iTTkuODYgMkEyLjg2IDIuODYgMCAwIDAgNyA0Ljg2djEuNjhoNC4yOWMuMzkgMCAuNzEuNTcuNzEuOTZINC44NkEyLjg2IDIuODYgMCAwIDAgMiAxMC4zNnYzLjc4MWEyLjg2IDIuODYgMCAwIDAgMi44NiAyLjg2aDEuMTh2LTIuNjhhMi44NSAyLjg1IDAgMCAxIDIuODUtMi44Nmg1LjI1YzEuNTggMCAyLjg2LTEuMjcxIDIuODYtMi44NTFWNC44NkEyLjg2IDIuODYgMCAwIDAgMTQuMTQgMnptLS43MiAxLjYxYy40IDAgLjcyLjEyLjcyLjcxcy0uMzIuODkxLS43Mi44OTFjLS4zOSAwLS43MS0uMy0uNzEtLjg5cy4zMi0uNzExLjcxLS43MTEiLz48cGF0aCBmaWxsPSIjZmRkODM1IiBkPSJNMTcuOTU5IDd2Mi42OGEyLjg1IDIuODUgMCAwIDEtMi44NSAyLjg1OUg5Ljg2QTIuODUgMi44NSAwIDAgMCA3IDE1LjM4OXYzLjc1YTIuODYgMi44NiAwIDAgMCAyLjg2IDIuODZoNC4yOEEyLjg2IDIuODYgMCAwIDAgMTcgMTkuMTR2LTEuNjhoLTQuMjkxYy0uMzkgMC0uNzA5LS41Ny0uNzA5LS45Nmg3LjE0QTIuODYgMi44NiAwIDAgMCAyMiAxMy42NFY5Ljg2QTIuODYgMi44NiAwIDAgMCAxOS4xNCA3ek04LjMyIDExLjUxM2wtLjAwNC4wMDQuMDM4LS4wMDR6bTYuNTQgNy4yNzZjLjM5IDAgLjcxLjMuNzEuODlhLjcxLjcxIDAgMCAxLS43MS43MWMtLjQgMC0uNzItLjEyLS43Mi0uNzFzLjMyLS44OS43Mi0uODkiLz48L3N2Zz4=",
-  rust:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmNzA0MyIgZD0ibTMwIDEyLTQtMlY2aC00bC0yLTQtNCAyLTQtMi0yIDRINnY0bC00IDIgMiA0LTIgNCA0IDJ2NGg0bDIgNCA0LTIgNCAyIDItNGg0di00bDQtMi0yLTRaTTYgMTZhOS45IDkuOSAwIDAgMSAuODQyLTRIMTB2OEg2Ljg0MkE5LjkgOS45IDAgMCAxIDYgMTZtMTAgMTBhOS45OCA5Ljk4IDAgMCAxLTcuOTc4LTRIMTZ2LTJoLTJ2LTJoNGMuODE5LjgxOS4yOTcgMi4zMDggMS4xNzkgMy4zN2ExLjg5IDEuODkgMCAwIDAgMS40Ni42M2gzLjM0QTkuOTggOS45OCAwIDAgMSAxNiAyNm0tMi0xMnYtMmg0YTEgMSAwIDAgMSAwIDJabTExLjE1OCA2SDI0YTIuMDA2IDIuMDA2IDAgMCAxLTItMiAyIDIgMCAwIDAtMi0yIDMgMyAwIDAgMCAzLTNxMC0uMDgtLjAwNC0uMTYxQTMuMTE1IDMuMTE1IDAgMCAwIDE5LjgzIDEwSDguMDIyYTkuOTg2IDkuOTg2IDAgMCAxIDE3LjEzNiAxMCIvPjwvc3ZnPg==",
-  go:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwYWNjMSIgZD0iTTIgMTJoNHYySDJ6bS0yIDRoNnYySDB6bTQgNGgydjJINHptMTYuOTU0LTVIMTR2M2gzLjIzOWE0LjQyIDQuNDIgMCAwIDEtMy41MzEgMiAyLjY1IDIuNjUgMCAwIDEtMi4wNTMtLjg1OCAyLjg2IDIuODYgMCAwIDEtLjYyOC0yLjI4QTQuNTE1IDQuNTE1IDAgMCAxIDE1LjI5MiAxM2EyLjczIDIuNzMgMCAwIDEgMS43NDkuNTg0bDIuOTYyLTEuMTg1QTUuNiA1LjYgMCAwIDAgMTUuMjkyIDEwYTcuNTI2IDcuNTI2IDAgMCAwLTcuMjQzIDYuNSA1LjYxNCA1LjYxNCAwIDAgMCA1LjY1OSA2LjUgNy41MjYgNy41MjYgMCAwIDAgNy4yNDMtNi41IDYuNCA2LjQgMCAwIDAgLjAwMy0xLjUiLz48cGF0aCBmaWxsPSIjMDBhY2MxIiBkPSJNMjYuMjkyIDEwYTcuNTI2IDcuNTI2IDAgMCAwLTcuMjQzIDYuNSA1LjYxNCA1LjYxNCAwIDAgMCA1LjY1OSA2LjUgNy41MjYgNy41MjYgMCAwIDAgNy4yNDMtNi41IDUuNjE0IDUuNjE0IDAgMCAwLTUuNjU5LTYuNW0yLjY4MSA2LjEzN0E0LjUxNSA0LjUxNSAwIDAgMSAyNC43MDggMjBhMi42NSAyLjY1IDAgMCAxLTIuMDUzLS44NTggMi44NiAyLjg2IDAgMCAxLS42MjgtMi4yOEE0LjUxNSA0LjUxNSAwIDAgMSAyNi4yOTIgMTNhMi42NSAyLjY1IDAgMCAxIDIuMDUzLjg1OCAyLjg2IDIuODYgMCAwIDEgLjYyOCAyLjI4WiIvPjwvc3ZnPg==",
-  html:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2U2NTEwMCIgZD0ibTQgNCAyIDIyIDEwIDIgMTAtMiAyLTIyWm0xOS43MiA3SDExLjI4bC4yOSAzaDExLjg2bC0uODAyIDkuMzM1TDE1Ljk5IDI1bC02LjYzNS0xLjY0Nkw4LjkzIDE5aDMuMDJsLjE5IDIgMy44Ni43NyAzLjg0LS43Ny4yOS00SDguODRMOCA4aDE2WiIvPjwvc3ZnPg==",
-  css:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzdlNTdjMiIgZD0iTTIwIDE4aC0ydi0yaC0ydjJjMCAuMTkzIDAgLjcwMyAxLjI1NCAxLjAzM0EzLjM0NSAzLjM0NSAwIDAgMSAyMCAyMmgydjJoMnYtMmMwLS4zODgtLjU2Mi0uODUxLTEuMjU0LTEuMDM0QzIwLjM1NiAyMC4zNCAyMCAxOC44NCAyMCAxOG0tMy4yNTQgMi45NjZDMTQuMzU2IDIwLjM0IDE0IDE4Ljg0IDE0IDE4aC0ydi0yaC0ydjhoMnYtMmg0djJoMnYtMmMwLS4zODgtLjU2Mi0uODUxLTEuMjU0LTEuMDM0Ii8+PHBhdGggZmlsbD0iIzdlNTdjMiIgZD0iTTI0IDRINHYyMGE0IDQgMCAwIDAgNCA0aDE2LjE2QTMuODQgMy44NCAwIDAgMCAyOCAyNC4xNlY4YTQgNCAwIDAgMC00LTRtMiAxNGgtMnYtMmgtMnYyYzAgLjE5MyAwIC43MDMgMS4yNTQgMS4wMzNBMy4zNDUgMy4zNDUgMCAwIDEgMjYgMjJ2MmEyIDIgMCAwIDEtMiAyaC0yYTIgMiAwIDAgMS0yLTIgMiAyIDAgMCAxLTIgMmgtMmEyIDIgMCAwIDEtMi0yIDIgMiAwIDAgMS0yIDJoLTJhMiAyIDAgMCAxLTItMnYtOGEyIDIgMCAwIDEgMi0yaDJhMiAyIDAgMCAxIDIgMiAyIDIgMCAwIDEgMi0yaDJhMiAyIDAgMCAxIDIgMiAyIDIgMCAwIDEgMi0yaDJhMiAyIDAgMCAxIDIgMloiLz48L3N2Zz4=",
-  json:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgLTk2MCA5NjAgOTYwIj48cGF0aCBmaWxsPSIjZjlhODI1IiBkPSJNNTYwLTE2MHYtODBoMTIwcTE3IDAgMjguNS0xMS41VDcyMC0yODB2LTgwcTAtMzggMjItNjl0NTgtNDR2LTE0cS0zNi0xMy01OC00NHQtMjItNjl2LTgwcTAtMTctMTEuNS0yOC41VDY4MC03MjBINTYwdi04MGgxMjBxNTAgMCA4NSAzNXQzNSA4NXY4MHEwIDE3IDExLjUgMjguNVQ4NDAtNTYwaDQwdjE2MGgtNDBxLTE3IDAtMjguNSAxMS41VDgwMC0zNjB2ODBxMCA1MC0zNSA4NXQtODUgMzV6bS0yODAgMHEtNTAgMC04NS0zNXQtMzUtODV2LTgwcTAtMTctMTEuNS0yOC41VDEyMC00MDBIODB2LTE2MGg0MHExNyAwIDI4LjUtMTEuNVQxNjAtNjAwdi04MHEwLTUwIDM1LTg1dDg1LTM1aDEyMHY4MEgyODBxLTE3IDAtMjguNSAxMS41VDI0MC02ODB2ODBxMCAzOC0yMiA2OXQtNTggNDR2MTRxMzYgMTMgNTggNDR0MjIgNjl2ODBxMCAxNyAxMS41IDI4LjVUMjgwLTI0MGgxMjB2ODB6Ii8+PC9zdmc+",
-  markdown:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzQyYTVmNSIgZD0ibTE0IDEwLTQgMy41TDYgMTBINHYxMmg0di02bDIgMiAyLTJ2Nmg0VjEwem0xMiA2di02aC00djZoLTRsNiA4IDYtOHoiLz48L3N2Zz4=",
-  console:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZmlsbD0iI2ZmNzA0MyIgZD0iTTIgMmExIDEgMCAwIDAtMSAxdjEwYzAgLjU1NC40NDYgMSAxIDFoMTJjLjU1NCAwIDEtLjQ0NiAxLTFWM2ExIDEgMCAwIDAtMS0xem0wIDNoMTJ2OEgyem0xIDIgMiAyLTIgMiAxIDEgMy0zLTMtM3ptNSAzLjVWMTJoNXYtMS41eiIvPjwvc3ZnPg==",
-  database:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmY2EyOCIgZD0iTTE2IDI0Yy01LjUyNSAwLTEwLS45LTEwLTJ2NGMwIDEuMSA0LjQ3NSAyIDEwIDJzMTAtLjkgMTAtMnYtNGMwIDEuMS00LjQ3NSAyLTEwIDJtMC04Yy01LjUyNSAwLTEwLS45LTEwLTJ2NGMwIDEuMSA0LjQ3NSAyIDEwIDJzMTAtLjkgMTAtMnYtNGMwIDEuMS00LjQ3NSAyLTEwIDJtMC0xMkMxMC40NzcgNCA2IDQuODk1IDYgNnY0YzAgMS4xIDQuNDc1IDIgMTAgMnMxMC0uOSAxMC0yVjZjMC0xLjEwNS00LjQ3Ny0yLTEwLTIiLz48L3N2Zz4=",
-  yaml:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmNTI1MiIgZD0iTTEzIDloNS41TDEzIDMuNXpNNiAyaDhsNiA2djEyYzAgMS4xLS45IDItMiAySDZjLTEuMSAwLTItLjktMi0yVjRjMC0xLjEuOS0yIDItMm0xMiAxNnYtMkg5djJ6bS00LTR2LTJINnYyeiIvPjwvc3ZnPg==",
-  toml:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZmlsbD0iI2NmZDhkYyIgZD0iTTQgNlY0aDh2Mkg5djdIN1Y2eiIvPjxwYXRoIGZpbGw9IiNlZjUzNTAiIGQ9Ik00IDF2MUgydjEyaDJ2MUgxVjF6bTggMHYxaDJ2MTJoLTJ2MWgzVjF6Ii8+PC9zdmc+",
-  xml:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzhiYzM0YSIgZD0iTTEzIDloNS41TDEzIDMuNXpNNiAyaDhsNiA2djEyYTIgMiAwIDAgMS0yIDJINmEyIDIgMCAwIDEtMi0yVjRjMC0xLjExLjg5LTIgMi0ybS4xMiAxMy41IDMuNzQgMy43NCAxLjQyLTEuNDEtMi4zMy0yLjMzIDIuMzMtMi4zMy0xLjQyLTEuNDF6bTExLjE2IDAtMy43NC0zLjc0LTEuNDIgMS40MSAyLjMzIDIuMzMtMi4zMyAyLjMzIDEuNDIgMS40MXoiLz48L3N2Zz4=",
-  lock:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZDU0ZiIgZD0iTTI1IDEyaC0zVjhhNiA2IDAgMCAwLTEyIDB2NEg3YTEgMSAwIDAgMC0xIDF2MTZhMSAxIDAgMCAwIDEgMWgxOGExIDEgMCAwIDAgMS0xVjEzYTEgMSAwIDAgMC0xLTFNMTQgOGEyIDIgMCAwIDEgNCAwdjRoLTRabTIgMTdhNCA0IDAgMSAxIDQtNCA0IDQgMCAwIDEtNCA0Ii8+PC9zdmc+",
-  image:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZmlsbD0iIzI2YTY5YSIgZD0iTTguNSA2aDRsLTQtNHpNMy44NzUgMUg5LjVsNCA0djguNmMwIC43NzMtLjYxNiAxLjQtMS4zNzUgMS40aC04LjI1Yy0uNzYgMC0xLjM3NS0uNjI3LTEuMzc1LTEuNFYyLjRjMC0uNzc3LjYxMi0xLjQgMS4zNzUtMS40TTQgMTMuNmg4VjhsLTIuNjI1IDIuOEw4IDkuNHptMS4yNS03LjdjLS43NiAwLTEuMzc1LjYyNy0xLjM3NSAxLjRzLjYxNiAxLjQgMS4zNzUgMS40Yy43NiAwIDEuMzc1LS42MjcgMS4zNzUtMS40UzYuMDA5IDUuOSA1LjI1IDUuOSIvPjwvc3ZnPg==",
-  git:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2U2NGExOSIgZD0iTTEzLjE3MiAyLjgyOCAxMS43OCA0LjIybDEuOTEgMS45MSAyIDJBMi45ODYgMi45ODYgMCAwIDEgMjAgMTAuODFhMy4yNSAzLjI1IDAgMCAxLS4zMSAxLjMxbDIuMDYgMmEyLjY4IDIuNjggMCAwIDEgMy4zNy41NyAyLjg2IDIuODYgMCAwIDEgLjg4IDIuMTE3IDMuMDIgMy4wMiAwIDAgMS0uODU2IDIuMTA5QTIuOSAyLjkgMCAwIDEgMjMgMTkuODFhMi45MyAyLjkzIDAgMCAxLTIuMTMtLjg3IDIuNjk0IDIuNjk0IDAgMCAxLS41Ni0zLjM4bC0yLTIuMDZhMyAzIDAgMCAxLS4zMS4xMlYyMGEzIDMgMCAwIDEgMS40NCAxLjA5IDIuOTIgMi45MiAwIDAgMSAuNTYgMS43MiAyLjg4IDIuODggMCAwIDEtLjg3OCAyLjEyOCAyLjk4IDIuOTggMCAwIDEtMi4wNDguODcxIDIuOTgxIDIuOTgxIDAgMCAxLTIuNTE0LTQuNzE5QTMgMyAwIDAgMSAxNiAyMHYtNi4zOGEyLjk2IDIuOTYgMCAwIDEtMS40NC0xLjA5IDIuOSAyLjkgMCAwIDEtLjU2LTEuNzIgMi45IDIuOSAwIDAgMSAuMzEtMS4zMWwtMy45LTMuOS03LjU3OSA3LjU3MmE0IDQgMCAwIDAtLjAwMSA1LjY1OGwxMC4zNDIgMTAuMzQyYTQgNCAwIDAgMCA1LjY1NiAwbDEwLjM0NC0xMC4zNDRhNCA0IDAgMCAwIDAtNS42NTZMMTguODI4IDIuODI4YTQgNCAwIDAgMC01LjY1NiAwIi8+PC9zdmc+",
-  docker:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzAyODhkMSIgZD0iTTIxLjgxIDEwLjI1Yy0uMDYtLjA0LS41Ni0uNDMtMS42NC0uNDMtLjI4IDAtLjU2LjAzLS44NC4wOC0uMjEtMS40LTEuMzgtMi4xMS0xLjQzLTIuMTRsLS4yOS0uMTctLjE4LjI3Yy0uMjQuMzYtLjQzLjc3LS41MSAxLjE5LS4yLjgtLjA4IDEuNTYuMzMgMi4yMS0uNDkuMjgtMS4yOS4zNS0xLjQ2LjM1SDIuNjJjLS4zNCAwLS42Mi4yOC0uNjIuNjMgMCAxLjE1LjE4IDIuMy41OCAzLjM4LjQ1IDEuMTkgMS4xMyAyLjA3IDIgMi42MS45OC42IDIuNTkuOTQgNC40Mi45NC43OSAwIDEuNjEtLjA3IDIuNDItLjIyIDEuMTItLjIgMi4yLS41OSAzLjE5LTEuMTZBOC4zIDguMyAwIDAgMCAxNi43OCAxNmMxLjA1LTEuMTcgMS42Ny0yLjUgMi4xMi0zLjY1aC4xOWMxLjE0IDAgMS44NS0uNDYgMi4yNC0uODUuMjYtLjI0LjQ1LS41My41OS0uODdsLjA4LS4yNHptLTE3Ljk2Ljk5aDEuNzZjLjA4IDAgLjE2LS4wNy4xNi0uMTZWOS41YzAtLjA4LS4wNy0uMTYtLjE2LS4xNkgzLjg1Yy0uMDkgMC0uMTYuMDctLjE2LjE2djEuNThjLjAxLjA5LjA3LjE2LjE2LjE2bTIuNDMgMGgxLjc2Yy4wOCAwIC4xNi0uMDcuMTYtLjE2VjkuNWMwLS4wOC0uMDctLjE2LS4xNi0uMTZINi4yOGMtLjA5IDAtLjE2LjA3LS4xNi4xNnYxLjU4Yy4wMS4wOS4wNy4xNi4xNi4xNm0yLjQ3IDBoMS43NWMuMSAwIC4xNy0uMDcuMTctLjE2VjkuNWMwLS4wOC0uMDYtLjE2LS4xNy0uMTZIOC43NWMtLjA4IDAtLjE1LjA3LS4xNS4xNnYxLjU4YzAgLjA5LjA2LjE2LjE1LjE2bTIuNDQgMGgxLjc3Yy4wOCAwIC4xNS0uMDcuMTUtLjE2VjkuNWMwLS4wOC0uMDYtLjE2LS4xNS0uMTZoLTEuNzdjLS4wOCAwLS4xNS4wNy0uMTUuMTZ2MS41OGMwIC4wOS4wNy4xNi4xNS4xNk02LjI4IDloMS43NmMuMDggMCAuMTYtLjA5LjE2LS4xOFY3LjI1YzAtLjA5LS4wNy0uMTYtLjE2LS4xNkg2LjI4Yy0uMDkgMC0uMTYuMDYtLjE2LjE2djEuNTdjLjAxLjA5LjA3LjE4LjE2LjE4bTIuNDcgMGgxLjc1Yy4xIDAgLjE3LS4wOS4xNy0uMThWNy4yNWMwLS4wOS0uMDYtLjE2LS4xNy0uMTZIOC43NWMtLjA4IDAtLjE1LjA2LS4xNS4xNnYxLjU3YzAgLjA5LjA2LjE4LjE1LjE4bTIuNDQgMGgxLjc3Yy4wOCAwIC4xNS0uMDkuMTUtLjE4VjcuMjVjMC0uMDktLjA3LS4xNi0uMTUtLjE2aC0xLjc3Yy0uMDggMC0uMTUuMDYtLjE1LjE2djEuNTdjMCAuMDkuMDcuMTguMTUuMThtMC0yLjI4aDEuNzdjLjA4IDAgLjE1LS4wNy4xNS0uMTZWNWMwLS4xLS4wNy0uMTctLjE1LS4xN2gtMS43N2MtLjA4IDAtLjE1LjA2LS4xNS4xN3YxLjU2YzAgLjA4LjA3LjE2LjE1LjE2bTIuNDYgNC41MmgxLjc2Yy4wOSAwIC4xNi0uMDcuMTYtLjE2VjkuNWMwLS4wOC0uMDctLjE2LS4xNi0uMTZoLTEuNzZjLS4wOCAwLS4xNS4wNy0uMTUuMTZ2MS41OGMwIC4wOS4wNy4xNi4xNS4xNiIvPjwvc3ZnPg==",
-  makefile:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2VmNTM1MCIgZD0ibTI5LjUgMjQuMDItMS42LS45MmE0LjQgNC40IDAgMCAwIC4wOS0uOUExLjMgMS4zIDAgMCAwIDI4IDIyYTUuNiA1LjYgMCAwIDAtLjEtMS4xbDEuNi0uOTJhLjQ5My40OTMgMCAwIDAgLjE4LS42OGwtMS41LTIuNmEuNDUuNDUgMCAwIDAtLjE4LS4xOFY2LjAxYTIuMDA2IDIuMDA2IDAgMCAwLTItMkg0YTIuMDA2IDIuMDA2IDAgMCAwLTIgMlYyMmEyLjAwNiAyLjAwNiAwIDAgMCAyIDJoMTAuNTNsLS4wMy4wMmEuNDkzLjQ5MyAwIDAgMC0uMTguNjhsMS41IDIuNmEuNDkzLjQ5MyAwIDAgMCAuNjguMThsMS42LS45MmE1LjkgNS45IDAgMCAwIDEuOSAxLjA5djEuODVhLjQ5NS40OTUgMCAwIDAgLjUuNWgzYS40OTUuNDk1IDAgMCAwIC41LS41di0xLjg1YTUuOSA1LjkgMCAwIDAgMS45LTEuMDlsMS42LjkyYS40OTMuNDkzIDAgMCAwIC42OC0uMThsMS41LTIuNmEuNDkzLjQ5MyAwIDAgMC0uMTgtLjY4TTI0IDIyLjAxYTEuOTkgMS45OSAwIDAgMS0uODggMS42NWwtLjE4LjExYTIuMDQgMi4wNCAwIDAgMS0xLjg4IDBsLS4xOC0uMTFhMS45OSAxLjk5IDAgMCAxLS44OC0xLjY1VjIyYTIgMiAwIDAgMSAuODgtMS42NmwuMTgtLjExYTIuMDQgMi4wNCAwIDAgMSAxLjg4IDBsLjE4LjExQTIgMiAwIDAgMSAyNCAyMlptMi00LjYzLS4xLjA2YTUuOSA1LjkgMCAwIDAtMS45LTEuMDlWMTQuNWEuNDk1LjQ5NSAwIDAgMC0uNS0uNWgtM2EuNDk1LjQ5NSAwIDAgMC0uNS41djEuODVhNS45IDUuOSAwIDAgMC0xLjkgMS4wOWwtMS42LS45MmEuNDkzLjQ5MyAwIDAgMC0uNjguMThsLTEuNSAyLjZhLjQ5My40OTMgMCAwIDAgLjE4LjY4bDEuNi45MkE1LjYgNS42IDAgMCAwIDE2IDIydi4wMUw0IDIyVjEwLjAxaDIyWiIvPjwvc3ZnPg==",
-  vite:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2EwZiIgZD0iTTI5LjMxMyAxMmgtNi42NjRhMS40MjcgMS40MjcgMCAwIDEtMS4xLTIuMjRsNC4zOTgtNi42NzZBLjcwMy43MDMgMCAwIDAgMjUuMzk3IDJIOC40MjhhLjYyLjYyIDAgMCAwLS41NS4yODlsLTUuNzcgOC42MjdBLjcwMy43MDMgMCAwIDAgMi42NTggMTJoOC4xNzVhMS40MjcgMS40MjcgMCAwIDEgMS4wOTkgMi4yNGwtNC40OCA2LjY3NkEuNzAyLjcwMiAwIDAgMCA4IDIybDYuNjk1LjAwMkExLjM0IDEuMzQgMCAwIDEgMTYgMjMuMzc1djUuOTM0YS42NTIuNjUyIDAgMCAwIDEuMTY4LjQzM2wxMi42OTQtMTYuNTg2YS43MjUuNzI1IDAgMCAwLS41NS0xLjE1NiIvPjwvc3ZnPg==",
-  log:
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIvPjxwYXRoIGZpbGw9IiNhZmI0MmIiIGQ9Ik0xOSA1djloLTV2NUg1VjV6bTAtMkg1Yy0xLjEgMC0yIC45LTIgMnYxNGMwIDEuMS45IDIgMiAyaDEwbDYtNlY1YzAtMS4xLS45LTItMi0ybS03IDExSDd2LTJoNXptNS00SDdWOGgxMHoiLz48L3N2Zz4=",
+  // File icons
+  console: consoleSvg,
+  css: cssSvg,
+  database: databaseSvg,
+  docker: dockerSvg,
+  document: documentSvg,
+  file: fileSvg,
+  git: gitSvg,
+  go: goSvg,
+  html: htmlSvg,
+  image: imageSvg,
+  javascript: javascriptSvg,
+  json: jsonSvg,
+  license: licenseSvg,
+  lock: lockSvg,
+  log: logSvg,
+  makefile: makefileSvg,
+  markdown: markdownSvg,
+  mdx: mdxSvg,
+  nodejs: nodejsSvg,
+  playwright: playwrightSvg,
+  pnpm: pnpmSvg,
+  python: pythonSvg,
+  react: reactSvg,
+  react_ts: reactTsSvg,
+  readme: readmeSvg,
+  rust: rustSvg,
+  sass: sassSvg,
+  svg: svgIconSvg,
+  toml: tomlSvg,
+  tsconfig: tsconfigSvg,
+  vite: viteSvg,
+  xml: xmlSvg,
+  yarn: yarnSvg,
+
+  // Folder icons (closed)
+  folder: folderSvg,
+  "folder-components": folderComponentsSvg,
+  "folder-coverage": folderCoverageSvg,
+  "folder-css": folderCssSvg,
+  "folder-dist": folderDistSvg,
+  "folder-docs": folderDocsSvg,
+  "folder-images": folderImagesSvg,
+  "folder-mock": folderMockSvg,
+  "folder-scripts": folderScriptsSvg,
+  "folder-src": folderSrcSvg,
+  "folder-storybook": folderStorybookSvg,
+  "folder-test": folderTestSvg,
+
+  // Folder icons (open)
+  "folder-open": folderOpenSvg,
+  "folder-components-open": folderComponentsOpenSvg,
+  "folder-coverage-open": folderCoverageOpenSvg,
+  "folder-css-open": folderCssOpenSvg,
+  "folder-dist-open": folderDistOpenSvg,
+  "folder-docs-open": folderDocsOpenSvg,
+  "folder-images-open": folderImagesOpenSvg,
+  "folder-mock-open": folderMockOpenSvg,
+  "folder-scripts-open": folderScriptsOpenSvg,
+  "folder-src-open": folderSrcOpenSvg,
+  "folder-storybook-open": folderStorybookOpenSvg,
+  "folder-test-open": folderTestOpenSvg,
 };

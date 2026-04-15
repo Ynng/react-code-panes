@@ -120,10 +120,16 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
           },
         };
       }
+      // Default new tabs to preview mode (VS Code behavior). Callers can
+      // explicitly pass isPreview: false to open a pinned tab.
+      const tab = action.tab.isPreview === undefined
+        ? { ...action.tab, isPreview: true }
+        : action.tab;
+
       let newTabs = [...group.tabs];
       let newMru = group.mruOrder;
       let replaceIdx = -1;
-      if (action.tab.isPreview) {
+      if (tab.isPreview) {
         replaceIdx = newTabs.findIndex((t) => t.isPreview);
         if (replaceIdx >= 0) {
           const replacedId = newTabs[replaceIdx].id;
@@ -139,7 +145,7 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
         const activeIdx = newTabs.findIndex((t) => t.id === group.activeTabId);
         insertIdx = activeIdx >= 0 ? activeIdx + 1 : newTabs.length;
       }
-      newTabs.splice(insertIdx, 0, action.tab);
+      newTabs.splice(insertIdx, 0, tab);
 
       return {
         ...state,
@@ -148,8 +154,8 @@ function reducer(state: WorkbenchState, action: Action): WorkbenchState {
           ...state.groups,
           [targetGroupId]: {
             tabs: newTabs,
-            activeTabId: action.tab.id,
-            mruOrder: updateMru(newMru, action.tab.id),
+            activeTabId: tab.id,
+            mruOrder: updateMru(newMru, tab.id),
           },
         },
       };

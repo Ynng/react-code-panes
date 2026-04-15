@@ -29,15 +29,15 @@ interface Step {
 }
 
 const TOOL_ICON_STYLE: CSSProperties = {
-  display: "block",
+  display: "inline-flex",
   width: 12,
   height: 12,
+  verticalAlign: "middle",
 };
 
 const INLINE_CODE_STYLE: CSSProperties = {
   fontSize: "0.846em",
   padding: "1px 3px",
-  borderRadius: 4,
   background: "rgba(110,118,129,0.25)",
   fontFamily: "var(--mosaic-font-family-mono)",
 };
@@ -259,7 +259,7 @@ function renderFormattedText(text: string) {
       const language = newlineIndex > 0 ? inner.slice(0, newlineIndex).trim() : "";
       const code = newlineIndex > 0 ? inner.slice(newlineIndex + 1) : inner;
       elements.push(
-        <div key={`code-${partIndex}`} style={{ margin: "16px 0", border: "1px solid #3c3c3c", background: "#1a1a1a", overflow: "hidden", borderRadius: 4 }}>
+        <div key={`code-${partIndex}`} style={{ margin: "16px 0", border: "1px solid #3c3c3c", background: "#1a1a1a", overflow: "hidden" }}>
           {language && <div style={{ padding: "4px 12px", fontSize: 11, color: "#6e6e6e", background: "#252526", borderBottom: "1px solid #3c3c3c", fontFamily: "var(--mosaic-font-family-mono)" }}>{language}</div>}
           <pre style={{ padding: "8px 12px", fontSize: 12, fontFamily: "var(--mosaic-font-family-mono)", color: "#d4d4d4", overflowX: "auto", lineHeight: 1.5, margin: 0 }}>{code}</pre>
         </div>,
@@ -368,26 +368,26 @@ function CompactToolCall({
         }}
       />
       <div
-        style={{
-          position: "absolute",
-          left: 4,
-          top: 8,
-          width: 14,
-          height: 14,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#858585",
-          transform: "translateY(-0.5px)",
-          pointerEvents: "none",
-        }}
-      >
-        <ToolIcon category={category} />
-      </div>
-      <div
         onClick={() => setOpen(!open)}
         style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: open ? "#cccccc" : "#858585", marginBottom: open ? 6 : 2, cursor: "pointer", userSelect: "none" }}
       >
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 14,
+            height: 14,
+            flexShrink: 0,
+            marginLeft: -20,
+            color: "#858585",
+            pointerEvents: "none",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          <ToolIcon category={category} />
+        </span>
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
           {labelParts.prefix}
           {labelParts.code && <> <code style={INLINE_CODE_STYLE}>{labelParts.code}</code></>}
@@ -400,12 +400,12 @@ function CompactToolCall({
 
       {open && (
         <div style={{ paddingBottom: 4 }}>
-          <div style={{ border: "1px solid #454545", borderRadius: 6, background: "#1e1e1e", margin: "4px 0", overflow: "hidden" }}>
+          <div style={{ border: "1px solid #454545", background: "#1e1e1e", margin: "4px 0", overflow: "hidden" }}>
             <div style={{ padding: "8px 12px", background: "#252526", borderBottom: "1px solid #454545", fontSize: 12, color: "#858585" }}>Input</div>
             <HighlightedInput content={toolCall.input} />
           </div>
           {result && (
-            <div style={{ border: "1px solid #454545", borderRadius: 6, background: "#1e1e1e", margin: "4px 0", overflow: "hidden" }}>
+            <div style={{ border: "1px solid #454545", background: "#1e1e1e", margin: "4px 0", overflow: "hidden" }}>
               <div style={{ padding: "8px 12px", background: "#252526", borderBottom: "1px solid #454545", fontSize: 12, color: "#858585", display: "flex", alignItems: "center", gap: 6 }}>
                 <span>Output ({resultLines} lines)</span>
                 {isError && <span style={{ fontSize: 10, fontFamily: "var(--mosaic-font-family-mono)", color: "#f14c4c" }}>ERR</span>}
@@ -432,7 +432,7 @@ function PreambleTurn({ turn }: { turn: AgentTraceTurn }) {
           <span style={{ fontWeight: "normal", marginLeft: 4 }}>({text.length.toLocaleString()} chars)</span>
         </button>
         {open && (
-          <pre style={{ marginTop: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12, color: "#d4d4d4", maxHeight: 400, overflow: "auto", fontFamily: "var(--mosaic-font-family-mono)", lineHeight: 1.6, marginLeft: 14, padding: 12, background: "#1a1a1a", border: "1px solid #3c3c3c", borderRadius: 4 }}>
+          <pre style={{ marginTop: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12, color: "#d4d4d4", maxHeight: 400, overflow: "auto", fontFamily: "var(--mosaic-font-family-mono)", lineHeight: 1.6, marginLeft: 14, padding: 12, background: "#1a1a1a", border: "1px solid #3c3c3c" }}>
             {text}
           </pre>
         )}
@@ -442,7 +442,7 @@ function PreambleTurn({ turn }: { turn: AgentTraceTurn }) {
 
   return (
     <div style={{ padding: "5px 16px", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-      <div style={{ fontSize: 13, color: "#d4d4d4", whiteSpace: "pre-wrap", lineHeight: "1.5em", background: "rgba(38,79,120,0.3)", borderRadius: 12, padding: "8px 12px", maxWidth: "90%", width: "fit-content", marginLeft: "auto" }}>
+      <div style={{ fontSize: 13, color: "#d4d4d4", whiteSpace: "pre-wrap", lineHeight: "1.5em", background: "rgba(38,79,120,0.3)", padding: "8px 12px", maxWidth: "90%", width: "fit-content", marginLeft: "auto" }}>
         {text}
       </div>
     </div>
@@ -466,7 +466,7 @@ function StepView({ step }: { step: Step }) {
   if (turn.type === "exit") {
     return (
       <div id={`step-${step.index}`} style={{ padding: "8px 16px", margin: "8px 0" }}>
-        <div style={{ fontSize: 12, color: "#d4d4d4", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: "1.5em", background: "rgba(200,45,72,0.12)", border: "1px solid rgba(200,45,72,0.3)", borderRadius: 4, padding: "10px 12px", fontFamily: "var(--mosaic-font-family-mono)" }}>
+        <div style={{ fontSize: 12, color: "#d4d4d4", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: "1.5em", background: "rgba(200,45,72,0.12)", border: "1px solid rgba(200,45,72,0.3)", padding: "10px 12px", fontFamily: "var(--mosaic-font-family-mono)" }}>
           <div style={{ fontSize: 11, color: "#c74e39", fontWeight: 600, marginBottom: 6, fontFamily: "inherit" }}>Session Exit</div>
           {renderFormattedText(turn.text ?? "")}
         </div>
@@ -477,7 +477,7 @@ function StepView({ step }: { step: Step }) {
   if (!isAssistant) {
     return (
       <div id={`step-${step.index}`} style={{ padding: "5px 16px", display: "flex", flexDirection: "column", alignItems: "flex-end", borderBottom: "1px solid rgba(60,60,60,0.3)" }}>
-        <div style={{ fontSize: 13, color: "#d4d4d4", whiteSpace: "pre-wrap", lineHeight: "1.5em", background: "rgba(38,79,120,0.3)", borderRadius: 12, padding: "8px 12px", maxWidth: "90%", width: "fit-content", marginLeft: "auto" }}>
+        <div style={{ fontSize: 13, color: "#d4d4d4", whiteSpace: "pre-wrap", lineHeight: "1.5em", background: "rgba(38,79,120,0.3)", padding: "8px 12px", maxWidth: "90%", width: "fit-content", marginLeft: "auto" }}>
           {turn.text}
         </div>
       </div>
@@ -601,38 +601,38 @@ export function AgentTraceViewer({ turns, batch, label }: AgentTraceViewerProps)
   return (
     <HighlighterContext.Provider value={highlighter}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: "var(--mosaic-font-family)" }}>
+        <div
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "0 16px",
+            height: 28,
+            background: "#252526",
+            borderBottom: "1px solid #3c3c3c",
+            fontSize: 11,
+            color: "#8b949e",
+            userSelect: "none",
+          }}
+        >
+          {heading && (
+            <span style={{ color: "#c9d1d9", fontWeight: 500 }}>
+              {heading}
+            </span>
+          )}
+          <span>{steps.length} steps</span>
+          <span style={{ color: "#555" }}>·</span>
+          <span>{totalToolCalls} tool calls</span>
+          {steps.length > 10 && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: 2 }}>
+              <button onClick={() => scrollToStep(0)} style={{ background: "none", border: "none", color: "#8b949e", cursor: "pointer", padding: "0 5px", fontFamily: "inherit", fontSize: "inherit" }}>Top</button>
+              <button onClick={() => scrollToStep(steps.length - 1)} style={{ background: "none", border: "none", color: "#8b949e", cursor: "pointer", padding: "0 5px", fontFamily: "inherit", fontSize: "inherit" }}>End</button>
+            </div>
+          )}
+        </div>
         <div style={{ flex: 1, overflow: "auto" }} ref={scrollRef}>
           <div style={{ maxWidth: 950, margin: "0 auto", paddingBottom: "60vh" }}>
-            <div
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 1,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 16px 6px",
-                background: "linear-gradient(180deg, rgba(30,30,30,0.98) 0%, rgba(30,30,30,0.94) 72%, rgba(30,30,30,0) 100%)",
-                fontSize: 11,
-                color: "#8b949e",
-              }}
-            >
-              {heading && (
-                <span style={{ color: "#c9d1d9", fontWeight: 500 }}>
-                  {heading}
-                </span>
-              )}
-              <span>{steps.length} steps</span>
-              <span>{totalToolCalls} tool calls</span>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                {steps.length > 10 && (
-                  <>
-                    <button onClick={() => scrollToStep(0)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#8b949e", cursor: "pointer", padding: "2px 7px", borderRadius: 999, fontFamily: "inherit", fontSize: "inherit" }}>Top</button>
-                    <button onClick={() => scrollToStep(steps.length - 1)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#8b949e", cursor: "pointer", padding: "2px 7px", borderRadius: 999, fontFamily: "inherit", fontSize: "inherit" }}>End</button>
-                  </>
-                )}
-              </div>
-            </div>
             {preamble.map((turn) => <PreambleTurn key={turn.id} turn={turn} />)}
             {preamble.length > 0 && steps.length > 0 && <div style={{ height: 8 }} />}
             {steps.map((step) => <StepView key={step.index} step={step} />)}

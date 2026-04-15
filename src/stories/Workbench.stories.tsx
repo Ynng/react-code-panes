@@ -55,7 +55,6 @@ const frameStyle: CSSProperties = {
   height: 860,
   margin: "0 auto",
   border: "1px solid #2d2d30",
-  borderRadius: 6,
   overflow: "hidden",
   background: "#1e1e1e",
   boxShadow: "0 22px 54px rgba(0, 0, 0, 0.34)",
@@ -149,7 +148,6 @@ function HeaderIconButton({
         alignItems: "center",
         justifyContent: "center",
         border: "none",
-        borderRadius: 3,
         background: active ? "rgba(255, 255, 255, 0.08)" : "transparent",
         color: active ? "var(--mosaic-sidebar-fg)" : "var(--mosaic-sidebar-header-fg)",
         cursor: "pointer",
@@ -206,7 +204,7 @@ function createDiffOverviewTab(): Tab {
     title: "changes.patch",
     icon: <FileIcon filename="changes.patch" />,
     content: (
-      <EditorBreadcrumb filePath="rollouts/source-control/changes.patch">
+      <EditorBreadcrumb filePath="workspace/changes.patch">
         <UnifiedDiffPreview diff={workspaceUnifiedDiff} />
       </EditorBreadcrumb>
     ),
@@ -262,17 +260,17 @@ function createTraceTab(id: string): Tab {
 }
 
 const outlineByFileId: Record<string, string[]> = {
-  "App.tsx": ["App()", "dashboard-shell", "dashboard-header", "RunSummary", "AgentTracePanel"],
-  "index.ts": ["App", "RunSummary", "AgentTracePanel", "buildReviewTabs"],
-  "RunSummary.tsx": ["rows", "RunSummary()", "summary-card", "summary-row"],
-  "AgentTraceViewer.tsx": ["Props", "AgentTraceViewer()", "TraceToolbar", "TraceRow"],
+  "App.tsx": ["App()", "app-shell", "app-header", "TaskList", "StatusBar"],
+  "index.ts": ["App", "TaskList", "StatusBar", "buildNavTabs"],
+  "TaskList.tsx": ["rows", "TaskList()", "task-card", "task-row"],
+  "StatusBar.tsx": ["Props", "StatusBar()", "StatusToolbar", "StatusRow"],
   "FileTree.tsx": ["FileTree()", "file-tree-row", "file-tree-label", "file-tree-status"],
-  "server.py": ["RunRequest", "launch_run(request)"],
-  "workbench.css": [".trace-viewer", ".trace-toolbar", ".file-tree-row"],
+  "server.py": ["TaskRequest", "create_task(request)"],
+  "app.css": [".status-bar", ".status-toolbar", ".file-tree-row"],
   "workspace.diff": [
-    "AgentTraceViewer.tsx",
+    "StatusBar.tsx",
     "FileTree.tsx",
-    "workbench.css",
+    "app.css",
   ],
 };
 
@@ -298,6 +296,12 @@ function ExplorerSection() {
         const file = getExampleFileByPath(item.path);
         if (!file) return;
         actions.activateOrOpenTab(activeGroupId, createCodeTab(file.id));
+      }}
+      onPinFile={(item) => {
+        if (item.type !== "file" || !activeGroupId) return;
+        const file = getExampleFileByPath(item.path);
+        if (!file) return;
+        actions.activateOrOpenTab(activeGroupId, { ...createCodeTab(file.id), isPreview: false });
       }}
       getDragTab={(item) => {
         if (item.type !== "file") return null;
@@ -404,6 +408,10 @@ function SourceControlSection({ viewMode }: { viewMode: "list" | "tree" }) {
             if (item.type !== "file" || !activeGroupId) return;
             actions.activateOrOpenTab(activeGroupId, createDiffFileTab(item.path));
           }}
+          onPinFile={(item) => {
+            if (item.type !== "file" || !activeGroupId) return;
+            actions.activateOrOpenTab(activeGroupId, { ...createDiffFileTab(item.path), isPreview: false });
+          }}
           getDragTab={(item) => {
             if (item.type !== "file") return null;
             return createDiffFileTab(item.path);
@@ -430,6 +438,12 @@ function TraceFilesSection() {
         const sample = getTraceSampleByPath(item.path);
         if (!sample) return;
         actions.activateOrOpenTab(activeGroupId, createTraceTab(sample.id));
+      }}
+      onPinFile={(item) => {
+        if (item.type !== "file" || !activeGroupId) return;
+        const sample = getTraceSampleByPath(item.path);
+        if (!sample) return;
+        actions.activateOrOpenTab(activeGroupId, { ...createTraceTab(sample.id), isPreview: false });
       }}
       getDragTab={(item) => {
         if (item.type !== "file") return null;
@@ -478,10 +492,10 @@ function ProblemsPanel() {
   return (
     <div style={{ padding: 12, color: "#e5e7eb", fontSize: 12, display: "grid", gap: 8 }}>
       <div style={{ borderLeft: "3px solid #f59e0b", paddingLeft: 10 }}>
-        Separate the explorer tree from source control changes so regular files and diffs do not share state.
+        The explorer tree and source control sections maintain separate selection state to avoid conflicts.
       </div>
       <div style={{ borderLeft: "3px solid #38bdf8", paddingLeft: 10 }}>
-        Trace fixtures are real rollout slices from `swe-bench-ultra`, so the viewer is exercised on longer transcripts.
+        Trace fixtures cover multiple agent formats so the viewer is exercised on longer, realistic transcripts.
       </div>
     </div>
   );
@@ -504,7 +518,7 @@ function TerminalPanel() {
 Running viewer and workbench stories
   ✓ source control opens Monaco diff editors
   ✓ trace fixtures open as workbench tabs
-  ✓ long rollout-derived traces render across supported formats`}
+  ✓ multi-format traces render correctly`}
     </pre>
   );
 }
@@ -522,10 +536,10 @@ function OutputPanel() {
       }}
     >
 {`{
-  "task_id": "kh73faxghpn90rtyxsrjmpjpsx83f4ws",
+  "workspace": "example-project",
   "diff_files": 3,
   "trace_files": 6,
-  "default_trace": "codex-cli-gpt-5.4-xhigh.raw.jsonl"
+  "default_trace": "codex-cli.raw.jsonl"
 }`}
     </pre>
   );
@@ -602,62 +616,36 @@ function CustomWorkspaceTabContent({ item }: { item: CustomWorkspaceItem }) {
         height: "100%",
         overflow: "auto",
         background: "var(--mosaic-editor-bg)",
-        color: "var(--mosaic-fg)",
+        padding: "16px 20px",
       }}
     >
-      <div
-        style={{
-          display: "grid",
-          gap: 18,
-          padding: 20,
-          maxWidth: 920,
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gap: 10,
-            padding: 18,
-            border: "1px solid rgba(255,255,255,0.08)",
-            background: "rgba(255,255,255,0.02)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 999,
-                background: item.accent,
-                boxShadow: `0 0 0 3px color-mix(in srgb, ${item.accent} 18%, transparent)`,
-              }}
-            />
-            <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b949e" }}>
-              {item.stage}
-            </div>
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 600 }}>{item.title}</div>
-          <div style={{ fontSize: 13, color: "#9da5b4", lineHeight: 1.6 }}>{item.subtitle}</div>
-          <div style={{ fontSize: 14, lineHeight: 1.7, color: "#d4d4d4" }}>{item.summary}</div>
+      <div style={{ maxWidth: 920 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 999,
+              background: item.accent,
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b949e" }}>
+            {item.stage}
+          </span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
+        <div style={{ fontSize: 20, fontWeight: 600, color: "#cccccc", marginBottom: 8 }}>{item.title}</div>
+        <div style={{ fontSize: 13, color: "#9da5b4", lineHeight: 1.6, marginBottom: 6 }}>{item.subtitle}</div>
+        <div style={{ fontSize: 13, lineHeight: 1.7, color: "#d4d4d4", marginBottom: 20 }}>{item.summary}</div>
+        <div style={{ borderTop: "1px solid #3c3c3c", paddingTop: 16, display: "grid", gap: 12 }}>
           {[
             ["Open semantics", "Same item id reuses the existing tab instead of opening a duplicate."],
             ["Custom UI", "This sidebar is plain React buttons, not a file tree or preset component."],
             ["Drag support", "These rows can also be dragged into editor groups using the exported drag helpers."],
           ].map(([label, value]) => (
-            <div
-              key={label}
-              style={{
-                padding: 14,
-                border: "1px solid rgba(255,255,255,0.06)",
-                background: "rgba(255,255,255,0.015)",
-                display: "grid",
-                gap: 6,
-              }}
-            >
-              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b949e" }}>{label}</div>
-              <div style={{ fontSize: 13, lineHeight: 1.6 }}>{value}</div>
+            <div key={label}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6e6e6e", marginBottom: 4 }}>{label}</div>
+              <div style={{ fontSize: 13, lineHeight: 1.6, color: "#cccccc" }}>{value}</div>
             </div>
           ))}
         </div>
@@ -681,10 +669,7 @@ function CustomWorkspaceList({ title, items }: { title: string; items: CustomWor
   const activeTabId = findActiveTabId(state);
 
   return (
-    <div style={{ padding: 8, display: "grid", gap: 6 }}>
-      <div style={{ padding: "2px 6px", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b949e" }}>
-        {title}
-      </div>
+    <div style={{ padding: "4px 0" }}>
       {items.map((item) => {
         const isActive = item.id === activeTabId;
         const tab = makeCustomWorkspaceTab(item);
@@ -705,29 +690,30 @@ function CustomWorkspaceList({ title, items }: { title: string; items: CustomWor
             }}
             onDragEnd={() => clearDragTab()}
             style={{
-              border: "1px solid rgba(255,255,255,0.06)",
-              background: isActive ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.025)",
+              border: "none",
+              background: isActive ? "rgba(255,255,255,0.06)" : "transparent",
               color: "inherit",
-              padding: 10,
+              padding: "6px 20px",
               textAlign: "left",
-              display: "grid",
-              gap: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               cursor: "pointer",
+              width: "100%",
+              fontSize: 13,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: item.accent,
-                  flexShrink: 0,
-                }}
-              />
-              <span style={{ fontSize: 13, fontWeight: 600, color: isActive ? "#ffffff" : "#d4d4d4" }}>{item.title}</span>
-            </div>
-            <span style={{ fontSize: 12, lineHeight: 1.5, color: "#8b949e" }}>{item.subtitle}</span>
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 999,
+                background: item.accent,
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ color: isActive ? "#ffffff" : "#cccccc", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
+            <span style={{ fontSize: 12, color: "#6e6e6e", marginLeft: "auto", flexShrink: 0 }}>{item.stage}</span>
           </button>
         );
       })}
@@ -836,7 +822,7 @@ function ReviewWorkbench({ initialState }: { initialState: Partial<WorkbenchStat
       id: "trace-files",
       title: "Trace Files",
       content: <TraceFilesSection />,
-      headerActions: <SectionActionLabel>real swe-bench fixtures</SectionActionLabel>,
+      headerActions: <SectionActionLabel>multi-format trace fixtures</SectionActionLabel>,
     },
     {
       id: "outline",
@@ -876,18 +862,18 @@ function buildDefaultState(): Partial<WorkbenchState> {
           createCodeTab("App.tsx"),
           createCodeTab("index.ts"),
           createDiffOverviewTab(),
-          createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx"),
-          createTraceTab("atif-gemini-cli-3.1-pro.trajectory.json"),
-          createTraceTab("codex-cli-gpt-5.4-xhigh.raw.jsonl"),
+          createDiffFileTab("src/components/StatusBar.tsx"),
+          createTraceTab("trajectory-format.json"),
+          createTraceTab("codex-cli.raw.jsonl"),
         ],
         activeTabId: "App.tsx",
         mruOrder: [
           "App.tsx",
           "index.ts",
           "workspace.diff",
-          "dashboard/src/components/AgentTraceViewer.tsx.diff",
-          "atif-gemini-cli-3.1-pro.trajectory.json",
-          "codex-cli-gpt-5.4-xhigh.raw.jsonl",
+          "src/components/StatusBar.tsx.diff",
+          "trajectory-format.json",
+          "codex-cli.raw.jsonl",
         ],
       },
     },
@@ -914,35 +900,35 @@ function buildSplitState(): Partial<WorkbenchState> {
         tabs: [
           createCodeTab("App.tsx"),
           createCodeTab("FileTree.tsx"),
-          createCodeTab("workbench.css"),
+          createCodeTab("app.css"),
         ],
         activeTabId: "App.tsx",
-        mruOrder: ["App.tsx", "FileTree.tsx", "workbench.css"],
+        mruOrder: ["App.tsx", "FileTree.tsx", "app.css"],
       },
       "group-review": {
         tabs: [
           createDiffOverviewTab(),
-          createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx"),
-          createDiffFileTab("dashboard/src/components/FileTree.tsx"),
+          createDiffFileTab("src/components/StatusBar.tsx"),
+          createDiffFileTab("src/components/FileTree.tsx"),
         ],
-        activeTabId: "dashboard/src/components/AgentTraceViewer.tsx.diff",
+        activeTabId: "src/components/StatusBar.tsx.diff",
         mruOrder: [
-          "dashboard/src/components/AgentTraceViewer.tsx.diff",
+          "src/components/StatusBar.tsx.diff",
           "workspace.diff",
-          "dashboard/src/components/FileTree.tsx.diff",
+          "src/components/FileTree.tsx.diff",
         ],
       },
       "group-trace": {
         tabs: [
-          createTraceTab("atif-gemini-cli-3.1-pro.trajectory.json"),
-          createTraceTab("codex-cli-gpt-5.4-xhigh.raw.jsonl"),
-          createTraceTab("claude-code-opus-4.6-max.raw.jsonl"),
+          createTraceTab("trajectory-format.json"),
+          createTraceTab("codex-cli.raw.jsonl"),
+          createTraceTab("claude-code.raw.jsonl"),
         ],
-        activeTabId: "claude-code-opus-4.6-max.raw.jsonl",
+        activeTabId: "claude-code.raw.jsonl",
         mruOrder: [
-          "claude-code-opus-4.6-max.raw.jsonl",
-          "atif-gemini-cli-3.1-pro.trajectory.json",
-          "codex-cli-gpt-5.4-xhigh.raw.jsonl",
+          "claude-code.raw.jsonl",
+          "trajectory-format.json",
+          "codex-cli.raw.jsonl",
         ],
       },
     },
@@ -984,10 +970,10 @@ type TailwindDemoItem = {
 
 const tailwindDemoItems: TailwindDemoItem[] = [
   {
-    id: "tailwind:release-readiness",
-    title: "Release readiness",
+    id: "tailwind:styled-tabs",
+    title: "Styled tabs",
     subtitle: "Tailwind card tabs with live React content",
-    eyebrow: "Launch",
+    eyebrow: "Basics",
     summary:
       "This tab is pure React content styled with Tailwind utilities while the workbench itself stays on react-code-panes primitives.",
     highlights: ["Utility classes on tab content", "Same id reuses the open tab", "Drag the row to open it in another group"],
@@ -995,10 +981,10 @@ const tailwindDemoItems: TailwindDemoItem[] = [
     chipClassName: "bg-emerald-400/12 text-emerald-200 ring-1 ring-inset ring-emerald-400/30",
   },
   {
-    id: "tailwind:verifier-brief",
-    title: "Verifier brief",
+    id: "tailwind:app-shell",
+    title: "App shell",
     subtitle: "A bounded app shell around Workbench",
-    eyebrow: "Checks",
+    eyebrow: "Layout",
     summary:
       "The host layout, hero, cards, and side content all use Tailwind. The workbench just fills a normal flex child instead of assuming full viewport ownership.",
     highlights: ["No full-screen requirement", "Tailwind wrappers around Workbench", "Preflight disabled to avoid global collisions"],
@@ -1006,12 +992,12 @@ const tailwindDemoItems: TailwindDemoItem[] = [
     chipClassName: "bg-sky-400/12 text-sky-200 ring-1 ring-inset ring-sky-400/30",
   },
   {
-    id: "tailwind:handoff-notes",
-    title: "Handoff notes",
+    id: "tailwind:custom-rows",
+    title: "Custom rows",
     subtitle: "Custom rows opening custom tabs",
-    eyebrow: "Docs",
+    eyebrow: "Extend",
     summary:
-      "This is the same extension model as the README example direction: your own UI decides what tab to open, and the workbench only manages splits, tabs, and drag-drop.",
+      "Your own UI decides what tab to open, and the workbench only manages splits, tabs, and drag-drop. No file-tree assumption in the core library.",
     highlights: ["Custom sidebar rows", "ReactElement tab content", "No file-tree assumption in core"],
     accentColor: "#f9a8d4",
     chipClassName: "bg-pink-400/12 text-pink-200 ring-1 ring-inset ring-pink-400/30",
@@ -1024,48 +1010,14 @@ const makeTailwindShowcaseTab: TabFactory<TailwindDemoItem> = (item) => ({
   labelColor: item.accentColor,
   icon: <FileIcon filename={`${item.title.toLowerCase().replace(/\s+/g, "-")}.mdx`} />,
   content: (
-    <div className="h-full overflow-auto bg-[#0f1720] text-slate-100">
-      <div className="mx-auto flex max-w-5xl flex-col gap-5 px-6 py-6">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${item.chipClassName}`}>
-              {item.eyebrow}
-            </span>
-            <span className="text-xs uppercase tracking-[0.22em] text-slate-400">tailwind host app</span>
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">{item.title}</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">{item.summary}</p>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {item.highlights.map((highlight, index) => (
-            <div key={highlight} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                0{index + 1}
-              </div>
-              <p className="text-sm font-medium leading-6 text-slate-100">{highlight}</p>
-            </div>
-          ))}
-        </div>
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
-          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/8 p-5">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/80">
-              Why this story exists
-            </div>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-200">
-              <li>Use Tailwind for the host application chrome without fighting the library.</li>
-              <li>Open arbitrary React tabs from your own rows, lists, cards, or dashboards.</li>
-              <li>Keep the workbench focused on tabs, splits, sidebars, and drag-drop routing.</li>
-            </ul>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-5">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Suggested README direction</div>
-            <code className="mt-3 block whitespace-pre-wrap font-mono text-[12px] leading-6 text-slate-300">
-{`<div className="flex h-[720px] min-h-0 flex-col rounded-xl border border-zinc-800">
-  <Workbench ... />
-</div>`}
-            </code>
-          </div>
-        </div>
+    <div className="h-full overflow-auto bg-[#1e1e1e] px-5 py-4 text-[13px] leading-7 text-slate-300">
+      <div className="max-w-3xl">
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{item.eyebrow}</div>
+        <h1 className="mb-3 text-lg font-semibold text-white">{item.title}</h1>
+        <p className="mb-5">{item.summary}</p>
+        {item.highlights.map((highlight) => (
+          <p key={highlight} className="mb-2 text-slate-400">— {highlight}</p>
+        ))}
       </div>
     </div>
   ),
@@ -1077,8 +1029,7 @@ function TailwindSidebarCards({ title, items }: { title: string; items: Tailwind
   const activeGroupId = useActiveWorkbenchGroupId();
 
   return (
-    <div className="flex flex-col gap-2 p-2">
-      <div className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{title}</div>
+    <div className="py-1">
       {items.map((item) => {
         const isActive = state.groups[activeGroupId]?.activeTabId === item.id;
         const tab = makeTailwindShowcaseTab(item);
@@ -1095,25 +1046,18 @@ function TailwindSidebarCards({ title, items }: { title: string; items: Tailwind
               setDragTab(tab);
             }}
             onDragEnd={() => clearDragTab()}
-            className={`group flex w-full flex-col gap-2 rounded-lg border px-3 py-3 text-left transition ${
+            className={`flex w-full items-center gap-2 border-0 px-5 py-1.5 text-left text-[13px] transition ${
               isActive
-                ? "border-emerald-400/40 bg-emerald-400/10 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.08)]"
-                : "border-white/5 bg-white/[0.03] hover:border-white/10 hover:bg-white/[0.05]"
+                ? "bg-white/[0.06] text-white"
+                : "bg-transparent text-zinc-300 hover:bg-white/[0.04]"
             }`}
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <span
-                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-                  style={{ background: item.accentColor }}
-                />
-                <span className="truncate text-[13px] font-semibold text-zinc-100">{item.title}</span>
-              </div>
-              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${item.chipClassName}`}>
-                {item.eyebrow}
-              </span>
-            </div>
-            <p className="text-xs leading-5 text-zinc-400">{item.subtitle}</p>
+            <span
+              className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
+              style={{ background: item.accentColor }}
+            />
+            <span className="truncate">{item.title}</span>
+            <span className="ml-auto flex-shrink-0 text-[11px] text-zinc-600">{item.eyebrow}</span>
           </button>
         );
       })}
@@ -1130,15 +1074,15 @@ function TailwindHostWorkbench() {
         tabs: [
           makeTailwindShowcaseTab(tailwindDemoItems[0]),
           createCodeTab("App.tsx"),
-          createDiffFileTab("dashboard/src/components/AgentTraceViewer.tsx"),
-          createTraceTab("atif-gemini-cli-3.1-pro.trajectory.json"),
+          createDiffFileTab("src/components/StatusBar.tsx"),
+          createTraceTab("trajectory-format.json"),
         ],
         activeTabId: tailwindDemoItems[0].id,
         mruOrder: [
           tailwindDemoItems[0].id,
           "App.tsx",
-          "dashboard/src/components/AgentTraceViewer.tsx.diff",
-          "atif-gemini-cli-3.1-pro.trajectory.json",
+          "src/components/StatusBar.tsx.diff",
+          "trajectory-format.json",
         ],
       },
     },
@@ -1164,19 +1108,9 @@ function TailwindHostWorkbench() {
       id: "tailwind-notes",
       title: "Integration Notes",
       content: (
-        <div className="flex flex-col gap-3 p-3 text-sm text-zinc-300">
-          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Tailwind setup</div>
-            <p className="mt-2 leading-6 text-zinc-300">
-              This story imports Tailwind only for Storybook, with preflight disabled so utility classes can sit next to the library CSS without resetting everything.
-            </p>
-          </div>
-          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">What to copy later</div>
-            <p className="mt-2 leading-6 text-zinc-300">
-              A normal app shell, a bounded workbench container, and your own item-to-tab factories. No full-screen requirement, no Tailwind dependency inside the library runtime.
-            </p>
-          </div>
+        <div className="px-5 py-3 text-[13px] leading-6 text-zinc-400">
+          <p>Preflight is enabled. The library's scoped CSS is resilient to global resets.</p>
+          <p className="mt-3">Import the workbench into a bounded container, wire your own item-to-tab factories, and use utility classes for the host shell.</p>
         </div>
       ),
     },
@@ -1198,29 +1132,13 @@ function TailwindHostWorkbench() {
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(20,184,166,0.12),_transparent_28%),linear-gradient(180deg,_#09090b_0%,_#111111_100%)] px-6 py-6 text-zinc-100">
-      <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-teal-200/70">Tailwind compatibility</div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">Wrap the workbench in a normal Tailwind app shell.</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-300">
-              This story proves the library can live inside a utility-class layout, open custom React tabs from your own UI, and still keep Monaco, diff, and trace viewers working in the same workspace.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/80">Host layout</div>
-              <p className="mt-2 text-sm leading-6 text-zinc-100">The workbench sits inside a bounded `h-[820px]` card, not a viewport-filling demo shell.</p>
-            </div>
-            <div className="rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200/80">Open semantics</div>
-              <p className="mt-2 text-sm leading-6 text-zinc-100">Tailwind buttons produce tabs; react-code-panes just handles activation, splitting, and drag-drop.</p>
-            </div>
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-[#1e1e1e] shadow-[0_22px_70px_rgba(0,0,0,0.35)]">
-          <div className="h-[820px]">
+    <div className="flex min-h-screen flex-col bg-[#09090b] text-zinc-100">
+      <div className="flex items-center gap-6 border-b border-zinc-800 px-6 py-3">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-teal-300/70">Tailwind host app</span>
+        <span className="text-[13px] text-zinc-400">The workbench embedded in a utility-class layout.</span>
+      </div>
+      <div className="flex-1">
+        <div className="h-full">
             <Workbench
               initialState={initialState}
               activityBar={{ items: [{ id: "tailwind", title: "Tailwind", icon: <ExplorerIcon /> }] }}
@@ -1228,7 +1146,6 @@ function TailwindHostWorkbench() {
               rightSidebar={{ sections: rightSections, defaultWidth: 320, minWidth: 240 }}
               panel={{ tabs: panelTabs, defaultHeight: 160, minHeight: 96 }}
             />
-          </div>
         </div>
       </div>
     </div>

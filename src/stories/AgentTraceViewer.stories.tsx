@@ -88,7 +88,7 @@ function SummaryPanel() {
     >
 {`{
   "fixtures": 6,
-  "source": "swe-bench-ultra rollout slices",
+  "source": "agent trace samples",
   "formats": ["codex", "claude", "gemini", "opencode", "mini-swe-agent"]
 }`}
     </pre>
@@ -113,7 +113,7 @@ const initialState: Partial<WorkbenchState> = {
   groups: {
     "group-main": {
       tabs: traceSamples.map((sample) => createTraceTab(sample.id)),
-      activeTabId: "atif-gemini-cli-3.1-pro.trajectory.json",
+      activeTabId: "trajectory-format.json",
       mruOrder: traceSamples.map((sample) => sample.id),
     },
   },
@@ -148,7 +148,6 @@ export const TraceGallery: Story = {
             height: 860,
             margin: "0 auto",
             border: "1px solid #2d2d30",
-            borderRadius: 6,
             overflow: "hidden",
             background: "#1e1e1e",
             boxShadow: "0 22px 54px rgba(0, 0, 0, 0.34)",

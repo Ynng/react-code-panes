@@ -1,63 +1,42 @@
 import { CSSProperties } from "react";
-import { MATERIAL_ICON_DATA } from "./materialIconTheme";
+import {
+  MATERIAL_DEFAULT_FILE_ICON_ID,
+  MATERIAL_DEFAULT_FOLDER_EXPANDED_ICON_ID,
+  MATERIAL_DEFAULT_FOLDER_ICON_ID,
+  MATERIAL_FILE_EXTENSION_ICON_IDS,
+  MATERIAL_FILE_NAME_ICON_IDS,
+  MATERIAL_FOLDER_EXPANDED_ICON_IDS,
+  MATERIAL_FOLDER_ICON_IDS,
+  MATERIAL_ICON_DATA,
+} from "./materialIconTheme";
 
 const SIZE = 16;
 
-const EXT_ICON: Record<string, string> = {
-  ts: "typescript",
-  tsx: "react_ts",
-  js: "javascript",
-  jsx: "react",
-  py: "python",
-  rs: "rust",
-  go: "go",
-  html: "html",
-  htm: "html",
-  css: "css",
-  scss: "css",
-  json: "json",
-  yaml: "yaml",
-  yml: "yaml",
-  toml: "toml",
-  xml: "xml",
-  md: "markdown",
-  mdx: "markdown",
-  sh: "console",
-  bash: "console",
-  zsh: "console",
-  sql: "database",
-  lock: "lock",
-  svg: "xml",
-  png: "image",
-  jpg: "image",
-  jpeg: "image",
-  gif: "image",
-  webp: "image",
-  diff: "git",
-  patch: "git",
-  log: "log",
-};
-
-const NAME_ICON: Record<string, string> = {
-  trajectory: "document",
-  dockerfile: "docker",
-  makefile: "makefile",
-  ".gitignore": "git",
-  "vite.config.ts": "vite",
-  "package.json": "json",
-  "tsconfig.json": "typescript",
-  "evaluator.json": "json",
-  "stats.json": "json",
-};
-
-function getExtension(filename: string): string {
-  const lower = filename.toLowerCase();
-  return lower.includes(".") ? lower.split(".").pop() ?? "" : "";
+function basename(path: string): string {
+  const normalized = path.replace(/\\/g, "/");
+  const parts = normalized.split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? path;
 }
 
-function getFileIconName(filename: string): string {
-  const lower = filename.toLowerCase();
-  return NAME_ICON[lower] ?? EXT_ICON[getExtension(filename)] ?? "document";
+function getExtension(filename: string): string {
+  const base = basename(filename).toLowerCase();
+  return base.includes(".") ? base.split(".").pop() ?? "" : "";
+}
+
+function getFileIconId(filename: string): string {
+  const base = basename(filename).toLowerCase();
+  const ext = getExtension(base);
+  return (MATERIAL_FILE_NAME_ICON_IDS as Record<string, string>)[base]
+    ?? (MATERIAL_FILE_EXTENSION_ICON_IDS as Record<string, string>)[ext]
+    ?? MATERIAL_DEFAULT_FILE_ICON_ID;
+}
+
+function getFolderIconId(name: string | undefined, open: boolean): string {
+  const lower = name ? basename(name).toLowerCase() : "";
+  if (open) {
+    return (MATERIAL_FOLDER_EXPANDED_ICON_IDS as Record<string, string>)[lower] ?? MATERIAL_DEFAULT_FOLDER_EXPANDED_ICON_ID;
+  }
+  return (MATERIAL_FOLDER_ICON_IDS as Record<string, string>)[lower] ?? MATERIAL_DEFAULT_FOLDER_ICON_ID;
 }
 
 function iconWrapperStyle(): CSSProperties {
@@ -72,33 +51,31 @@ function iconWrapperStyle(): CSSProperties {
   };
 }
 
+function IconImage({ iconId }: { iconId: string }) {
+  return (
+    <img
+      src={MATERIAL_ICON_DATA[iconId] ?? MATERIAL_ICON_DATA[MATERIAL_DEFAULT_FILE_ICON_ID]}
+      alt=""
+      width={SIZE}
+      height={SIZE}
+      draggable={false}
+      style={{ width: SIZE, height: SIZE }}
+    />
+  );
+}
+
 export function FileIcon({ filename, className }: { filename: string; className?: string }) {
-  const iconName = getFileIconName(filename);
   return (
     <span className={className} style={iconWrapperStyle()} aria-hidden="true">
-      <img
-        src={MATERIAL_ICON_DATA[iconName] ?? MATERIAL_ICON_DATA.document}
-        alt=""
-        width={SIZE}
-        height={SIZE}
-        draggable={false}
-        style={{ width: SIZE, height: SIZE }}
-      />
+      <IconImage iconId={getFileIconId(filename)} />
     </span>
   );
 }
 
-export function FolderIcon({ open, className }: { open: boolean; className?: string }) {
+export function FolderIcon({ open, name, className }: { open: boolean; name?: string; className?: string }) {
   return (
     <span className={className} style={iconWrapperStyle()} aria-hidden="true">
-      <img
-        src={open ? MATERIAL_ICON_DATA["folder-open"] : MATERIAL_ICON_DATA.folder}
-        alt=""
-        width={SIZE}
-        height={SIZE}
-        draggable={false}
-        style={{ width: SIZE, height: SIZE }}
-      />
+      <IconImage iconId={getFolderIconId(name, open)} />
     </span>
   );
 }

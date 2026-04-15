@@ -17,7 +17,10 @@ interface CodeFileTreeProps {
   items: CodeFileTreeItem[];
   selectedPath?: string | null;
   defaultExpandedPaths?: string[];
+  /** Single-click: open as preview tab. */
   onOpenFile?: (item: CodeFileTreeItem) => void;
+  /** Double-click: open as pinned (non-preview) tab. */
+  onPinFile?: (item: CodeFileTreeItem) => void;
   getDragTab?: (item: CodeFileTreeItem) => Tab | null;
   style?: CSSProperties;
 }
@@ -55,6 +58,7 @@ export function CodeFileTree({
   selectedPath,
   defaultExpandedPaths,
   onOpenFile,
+  onPinFile,
   getDragTab,
   style,
 }: CodeFileTreeProps) {
@@ -89,6 +93,9 @@ export function CodeFileTree({
             onClick={() => {
               if (isFolder) toggleFolder(item.path);
               else onOpenFile?.(item);
+            }}
+            onDoubleClick={() => {
+              if (!isFolder) onPinFile?.(item);
             }}
             onDragStart={(event) => {
               if (!getDragTab || isFolder) return;
@@ -131,7 +138,7 @@ export function CodeFileTree({
               {isFolder ? <Chevron open={isExpanded} /> : null}
             </span>
             {isFolder ? (
-              <FolderIcon open={isExpanded} />
+              <FolderIcon open={isExpanded} name={item.title ?? basename(item.path)} />
             ) : (
               <FileIcon filename={item.iconFilename ?? basename(item.path)} />
             )}

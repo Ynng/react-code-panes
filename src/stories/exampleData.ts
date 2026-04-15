@@ -1,12 +1,12 @@
 import type { AgentTraceTurn } from "../types/agentTrace";
 import { parseAgentTrace } from "../utils/agentTrace";
 import type { ChangedFileItem, CodeFileTreeItem } from "../index";
-import claudeCodeTraceRaw from "./fixtures/claude-code-opus-4.6-max.raw.jsonl?raw";
-import atifGeminiTraceRaw from "./fixtures/atif-gemini-cli-3.1-pro.trajectory.json?raw";
-import codexTraceRaw from "./fixtures/codex-cli-gpt-5.4-xhigh.raw.jsonl?raw";
-import geminiTraceRaw from "./fixtures/gemini-cli-3.1-pro.raw.json?raw";
-import miniSweAgentTraceRaw from "./fixtures/mini-swe-agent-gpt-5.4.raw.json?raw";
-import openCodeTraceRaw from "./fixtures/opencode-gemini-3.1-pro.raw.json?raw";
+import claudeCodeTraceRaw from "./fixtures/claude-code.raw.jsonl?raw";
+import trajectoryTraceRaw from "./fixtures/trajectory-format.json?raw";
+import codexTraceRaw from "./fixtures/codex-cli.raw.jsonl?raw";
+import geminiTraceRaw from "./fixtures/gemini-cli.raw.json?raw";
+import miniSweAgentTraceRaw from "./fixtures/mini-swe-agent.raw.json?raw";
+import openCodeTraceRaw from "./fixtures/opencode.raw.json?raw";
 
 export interface ExampleFile {
   id: string;
@@ -32,26 +32,26 @@ export interface TraceSample {
 export const exampleFiles: ExampleFile[] = [
   {
     id: "App.tsx",
-    path: "dashboard/src/App.tsx",
+    path: "src/App.tsx",
     language: "tsx",
-    content: `import { RunSummary } from "./components/RunSummary";
-import { AgentTracePanel } from "./components/AgentTracePanel";
-import "./styles/workbench.css";
+    content: `import { TaskList } from "./components/TaskList";
+import { StatusBar } from "./components/StatusBar";
+import "./styles/app.css";
 
 export function App() {
   return (
-    <main className="dashboard-shell">
-      <header className="dashboard-header">
+    <main className="app-shell">
+      <header className="app-header">
         <div>
-          <h1>SWE-bench Ultra</h1>
-          <p>Inspect patches, traces, and verifier output in one workbench.</p>
+          <h1>Project Dashboard</h1>
+          <p>Track tasks, review changes, and inspect activity logs.</p>
         </div>
-        <button className="launch-button">Launch review session</button>
+        <button className="primary-button">New task</button>
       </header>
 
-      <section className="dashboard-grid">
-        <RunSummary />
-        <AgentTracePanel />
+      <section className="content-grid">
+        <TaskList />
+        <StatusBar />
       </section>
     </main>
   );
@@ -60,34 +60,34 @@ export function App() {
   },
   {
     id: "index.ts",
-    path: "dashboard/src/index.ts",
+    path: "src/index.ts",
     language: "ts",
     content: `export { App } from "./App";
-export { RunSummary } from "./components/RunSummary";
-export { AgentTracePanel } from "./components/AgentTracePanel";
-export { buildReviewTabs } from "./lib/reviewTabs";
+export { TaskList } from "./components/TaskList";
+export { StatusBar } from "./components/StatusBar";
+export { buildNavTabs } from "./lib/navigation";
 `,
   },
   {
-    id: "RunSummary.tsx",
-    path: "dashboard/src/components/RunSummary.tsx",
+    id: "TaskList.tsx",
+    path: "src/components/TaskList.tsx",
     language: "tsx",
     content: `const rows = [
-  { label: "pass rate", value: "58.4%", tone: "good" },
-  { label: "resolved", value: "132 / 226", tone: "good" },
-  { label: "trace coverage", value: "100%", tone: "neutral" },
+  { label: "completed", value: "18 / 24", tone: "good" },
+  { label: "in progress", value: "4", tone: "neutral" },
+  { label: "blocked", value: "2", tone: "warning" },
 ];
 
-export function RunSummary() {
+export function TaskList() {
   return (
-    <section className="summary-card">
+    <section className="task-card">
       <header>
-        <h2>Latest benchmark snapshot</h2>
-        <span className="summary-badge">Review candidate</span>
+        <h2>Current sprint</h2>
+        <span className="status-badge">Active</span>
       </header>
       <dl>
         {rows.map((row) => (
-          <div key={row.label} className="summary-row">
+          <div key={row.label} className="task-row">
             <dt>{row.label}</dt>
             <dd data-tone={row.tone}>{row.value}</dd>
           </div>
@@ -99,26 +99,26 @@ export function RunSummary() {
 `,
   },
   {
-    id: "AgentTraceViewer.tsx",
-    path: "dashboard/src/components/AgentTraceViewer.tsx",
+    id: "StatusBar.tsx",
+    path: "src/components/StatusBar.tsx",
     language: "tsx",
     content: `type Props = {
-  turns: Turn[];
-  filter?: "all" | "assistant" | "tool";
+  entries: LogEntry[];
+  filter?: "all" | "info" | "error";
 };
 
-export function AgentTraceViewer({ turns, filter = "all" }: Props) {
-  const visibleTurns = turns.filter((turn) => {
-    if (filter === "assistant") return turn.type === "assistant";
-    if (filter === "tool") return turn.type === "tool_result";
+export function StatusBar({ entries, filter = "all" }: Props) {
+  const visible = entries.filter((entry) => {
+    if (filter === "info") return entry.level === "info";
+    if (filter === "error") return entry.level === "error";
     return true;
   });
 
   return (
-    <div className="trace-viewer">
-      <TraceToolbar filter={filter} />
-      {visibleTurns.map((turn) => (
-        <TraceRow key={turn.id} turn={turn} />
+    <div className="status-bar">
+      <StatusToolbar filter={filter} />
+      {visible.map((entry) => (
+        <StatusRow key={entry.id} entry={entry} />
       ))}
     </div>
   );
@@ -127,7 +127,7 @@ export function AgentTraceViewer({ turns, filter = "all" }: Props) {
   },
   {
     id: "FileTree.tsx",
-    path: "dashboard/src/components/FileTree.tsx",
+    path: "src/components/FileTree.tsx",
     language: "tsx",
     content: `export function FileTree({ files, onOpenFile }: Props) {
   return (
@@ -149,16 +149,16 @@ export function AgentTraceViewer({ turns, filter = "all" }: Props) {
 `,
   },
   {
-    id: "workbench.css",
-    path: "dashboard/src/styles/workbench.css",
+    id: "app.css",
+    path: "src/styles/app.css",
     language: "css",
-    content: `.trace-viewer {
+    content: `.status-bar {
   display: grid;
   gap: 12px;
   padding: 14px;
 }
 
-.trace-toolbar {
+.status-toolbar {
   display: flex;
   gap: 8px;
   padding-bottom: 8px;
@@ -175,7 +175,7 @@ export function AgentTraceViewer({ turns, filter = "all" }: Props) {
   },
   {
     id: "server.py",
-    path: "eval/runner/server.py",
+    path: "api/server.py",
     language: "python",
     content: `from __future__ import annotations
 
@@ -184,15 +184,15 @@ from pathlib import Path
 
 
 @dataclass
-class RunRequest:
-    task_id: str
-    agent_name: str
+class TaskRequest:
+    project_id: str
+    assignee: str
 
 
-def launch_run(request: RunRequest) -> Path:
-    run_dir = Path("runs") / request.task_id / request.agent_name
-    run_dir.mkdir(parents=True, exist_ok=True)
-    return run_dir
+def create_task(request: TaskRequest) -> Path:
+    task_dir = Path("data") / request.project_id / request.assignee
+    task_dir.mkdir(parents=True, exist_ok=True)
+    return task_dir
 `,
   },
   {
@@ -205,7 +205,7 @@ This Storybook scene mirrors a code review surface:
 
 - code files in a draggable explorer
 - unified diff overview plus per-file Monaco diff
-- agent trajectory viewers for multiple harnesses
+- agent trace viewers for multiple formats
 - bottom panel for terminal, problems, and structured output
 `,
   },
@@ -214,7 +214,7 @@ This Storybook scene mirrors a code review surface:
     path: "package.json",
     language: "json",
     content: `{
-  "name": "swe-bench-ultra-dashboard",
+  "name": "example-workspace",
   "private": true,
   "type": "module",
   "scripts": {
@@ -255,42 +255,42 @@ coverage
 
 export const exampleDiffFiles: ExampleDiffFile[] = [
   {
-    path: "dashboard/src/components/AgentTraceViewer.tsx",
+    path: "src/components/StatusBar.tsx",
     additions: 24,
     deletions: 7,
     status: "modified",
     language: "tsx",
     original: `type Props = {
-  turns: Turn[];
+  entries: LogEntry[];
 };
 
-export function AgentTraceViewer({ turns }: Props) {
+export function StatusBar({ entries }: Props) {
   return (
-    <div className="trace-viewer">
-      {turns.map((turn) => (
-        <TraceRow key={turn.id} turn={turn} />
+    <div className="status-bar">
+      {entries.map((entry) => (
+        <StatusRow key={entry.id} entry={entry} />
       ))}
     </div>
   );
 }
 `,
     modified: `type Props = {
-  turns: Turn[];
-  filter?: "all" | "assistant" | "tool";
+  entries: LogEntry[];
+  filter?: "all" | "info" | "error";
 };
 
-export function AgentTraceViewer({ turns, filter = "all" }: Props) {
-  const visibleTurns = turns.filter((turn) => {
-    if (filter === "assistant") return turn.type === "assistant";
-    if (filter === "tool") return turn.type === "tool_result";
+export function StatusBar({ entries, filter = "all" }: Props) {
+  const visible = entries.filter((entry) => {
+    if (filter === "info") return entry.level === "info";
+    if (filter === "error") return entry.level === "error";
     return true;
   });
 
   return (
-    <div className="trace-viewer">
-      <TraceToolbar filter={filter} />
-      {visibleTurns.map((turn) => (
-        <TraceRow key={turn.id} turn={turn} />
+    <div className="status-bar">
+      <StatusToolbar filter={filter} />
+      {visible.map((entry) => (
+        <StatusRow key={entry.id} entry={entry} />
       ))}
     </div>
   );
@@ -298,7 +298,7 @@ export function AgentTraceViewer({ turns, filter = "all" }: Props) {
 `,
   },
   {
-    path: "dashboard/src/components/FileTree.tsx",
+    path: "src/components/FileTree.tsx",
     additions: 18,
     deletions: 5,
     status: "modified",
@@ -335,12 +335,12 @@ export function AgentTraceViewer({ turns, filter = "all" }: Props) {
 `,
   },
   {
-    path: "dashboard/src/styles/workbench.css",
+    path: "src/styles/app.css",
     additions: 11,
     deletions: 1,
     status: "modified",
     language: "css",
-    original: `.trace-viewer {
+    original: `.status-bar {
   padding: 12px;
 }
 
@@ -350,13 +350,13 @@ export function AgentTraceViewer({ turns, filter = "all" }: Props) {
   gap: 8px;
 }
 `,
-    modified: `.trace-viewer {
+    modified: `.status-bar {
   display: grid;
   gap: 12px;
   padding: 14px;
 }
 
-.trace-toolbar {
+.status-toolbar {
   display: flex;
   gap: 8px;
   padding-bottom: 8px;
@@ -373,41 +373,41 @@ export function AgentTraceViewer({ turns, filter = "all" }: Props) {
   },
 ];
 
-export const workspaceUnifiedDiff = `diff --git a/dashboard/src/components/AgentTraceViewer.tsx b/dashboard/src/components/AgentTraceViewer.tsx
+export const workspaceUnifiedDiff = `diff --git a/src/components/StatusBar.tsx b/src/components/StatusBar.tsx
 index 1e14dd1..78b4aa2 100644
---- a/dashboard/src/components/AgentTraceViewer.tsx
-+++ b/dashboard/src/components/AgentTraceViewer.tsx
+--- a/src/components/StatusBar.tsx
++++ b/src/components/StatusBar.tsx
 @@ -1,13 +1,25 @@
 -type Props = {
--  turns: Turn[];
+-  entries: LogEntry[];
 -};
 +type Props = {
-+  turns: Turn[];
-+  filter?: "all" | "assistant" | "tool";
++  entries: LogEntry[];
++  filter?: "all" | "info" | "error";
 +};
 
--export function AgentTraceViewer({ turns }: Props) {
-+export function AgentTraceViewer({ turns, filter = "all" }: Props) {
-+  const visibleTurns = turns.filter((turn) => {
-+    if (filter === "assistant") return turn.type === "assistant";
-+    if (filter === "tool") return turn.type === "tool_result";
+-export function StatusBar({ entries }: Props) {
++export function StatusBar({ entries, filter = "all" }: Props) {
++  const visible = entries.filter((entry) => {
++    if (filter === "info") return entry.level === "info";
++    if (filter === "error") return entry.level === "error";
 +    return true;
 +  });
 +
    return (
-     <div className="trace-viewer">
--      {turns.map((turn) => (
-+      <TraceToolbar filter={filter} />
-+      {visibleTurns.map((turn) => (
-         <TraceRow key={turn.id} turn={turn} />
+     <div className="status-bar">
+-      {entries.map((entry) => (
++      <StatusToolbar filter={filter} />
++      {visible.map((entry) => (
+         <StatusRow key={entry.id} entry={entry} />
        ))}
      </div>
    );
  }
-diff --git a/dashboard/src/components/FileTree.tsx b/dashboard/src/components/FileTree.tsx
+diff --git a/src/components/FileTree.tsx b/src/components/FileTree.tsx
 index 0d3ad66..3b18c51 100644
---- a/dashboard/src/components/FileTree.tsx
-+++ b/dashboard/src/components/FileTree.tsx
+--- a/src/components/FileTree.tsx
++++ b/src/components/FileTree.tsx
 @@ -1,10 +1,18 @@
  export function FileTree({ files, onOpenFile }: Props) {
    return (
@@ -428,19 +428,19 @@ index 0d3ad66..3b18c51 100644
      </div>
    );
  }
-diff --git a/dashboard/src/styles/workbench.css b/dashboard/src/styles/workbench.css
+diff --git a/src/styles/app.css b/src/styles/app.css
 index 8fe32ab..1f53ee7 100644
---- a/dashboard/src/styles/workbench.css
-+++ b/dashboard/src/styles/workbench.css
+--- a/src/styles/app.css
++++ b/src/styles/app.css
 @@ -1,8 +1,18 @@
- .trace-viewer {
+ .status-bar {
 -  padding: 12px;
 +  display: grid;
 +  gap: 12px;
 +  padding: 14px;
 +}
 +
-+.trace-toolbar {
++.status-toolbar {
 +  display: flex;
 +  gap: 8px;
 +  padding-bottom: 8px;
@@ -457,43 +457,31 @@ index 8fe32ab..1f53ee7 100644
 
 export const exampleFileTree: CodeFileTreeItem[] = [
   {
-    path: "dashboard",
+    path: "src",
     type: "folder",
     children: [
+      { path: "src/App.tsx", type: "file" },
+      { path: "src/index.ts", type: "file" },
       {
-        path: "dashboard/src",
+        path: "src/components",
         type: "folder",
         children: [
-          { path: "dashboard/src/App.tsx", type: "file" },
-          { path: "dashboard/src/index.ts", type: "file" },
-          {
-            path: "dashboard/src/components",
-            type: "folder",
-            children: [
-              { path: "dashboard/src/components/RunSummary.tsx", type: "file" },
-              { path: "dashboard/src/components/AgentTraceViewer.tsx", type: "file" },
-              { path: "dashboard/src/components/FileTree.tsx", type: "file" },
-            ],
-          },
-          {
-            path: "dashboard/src/styles",
-            type: "folder",
-            children: [{ path: "dashboard/src/styles/workbench.css", type: "file" }],
-          },
+          { path: "src/components/TaskList.tsx", type: "file" },
+          { path: "src/components/StatusBar.tsx", type: "file" },
+          { path: "src/components/FileTree.tsx", type: "file" },
         ],
+      },
+      {
+        path: "src/styles",
+        type: "folder",
+        children: [{ path: "src/styles/app.css", type: "file" }],
       },
     ],
   },
   {
-    path: "eval",
+    path: "api",
     type: "folder",
-    children: [
-      {
-        path: "eval/runner",
-        type: "folder",
-        children: [{ path: "eval/runner/server.py", type: "file" }],
-      },
-    ],
+    children: [{ path: "api/server.py", type: "file" }],
   },
   {
     path: "repo",
@@ -509,39 +497,39 @@ export const exampleFileTree: CodeFileTreeItem[] = [
 
 const traceFixtureSamples = [
   {
-    id: "atif-gemini-cli-3.1-pro.trajectory.json",
-    title: "ATIF trajectory",
-    path: "rollouts/atif/atif-gemini-cli-3.1-pro.trajectory.json",
-    raw: atifGeminiTraceRaw,
+    id: "trajectory-format.json",
+    title: "Trajectory Format",
+    path: "traces/trajectory/trajectory-format.json",
+    raw: trajectoryTraceRaw,
   },
   {
-    id: "codex-cli-gpt-5.4-xhigh.raw.jsonl",
+    id: "codex-cli.raw.jsonl",
     title: "Codex CLI",
-    path: "rollouts/codex/codex-cli-gpt-5.4-xhigh.raw.jsonl",
+    path: "traces/codex/codex-cli.raw.jsonl",
     raw: codexTraceRaw,
   },
   {
-    id: "claude-code-opus-4.6-max.raw.jsonl",
+    id: "claude-code.raw.jsonl",
     title: "Claude Code",
-    path: "rollouts/claude/claude-code-opus-4.6-max.raw.jsonl",
+    path: "traces/claude/claude-code.raw.jsonl",
     raw: claudeCodeTraceRaw,
   },
   {
-    id: "gemini-cli-3.1-pro.raw.json",
+    id: "gemini-cli.raw.json",
     title: "Gemini CLI",
-    path: "rollouts/gemini/gemini-cli-3.1-pro.raw.json",
+    path: "traces/gemini/gemini-cli.raw.json",
     raw: geminiTraceRaw,
   },
   {
-    id: "opencode-gemini-3.1-pro.raw.json",
+    id: "opencode.raw.json",
     title: "OpenCode",
-    path: "rollouts/opencode/opencode-gemini-3.1-pro.raw.json",
+    path: "traces/opencode/opencode.raw.json",
     raw: openCodeTraceRaw,
   },
   {
-    id: "mini-swe-agent-gpt-5.4.raw.json",
+    id: "mini-swe-agent.raw.json",
     title: "mini-swe-agent",
-    path: "rollouts/mini-swe-agent/mini-swe-agent-gpt-5.4.raw.json",
+    path: "traces/mini-swe-agent/mini-swe-agent.raw.json",
     raw: miniSweAgentTraceRaw,
   },
 ] as const;
@@ -553,38 +541,38 @@ export const traceSamples: TraceSample[] = traceFixtureSamples.map((sample) => (
 
 export const traceFileTree: CodeFileTreeItem[] = [
   {
-    path: "rollouts",
+    path: "traces",
     type: "folder",
     children: [
       {
-        path: "rollouts/atif",
+        path: "traces/trajectory",
         type: "folder",
-        children: [{ path: "rollouts/atif/atif-gemini-cli-3.1-pro.trajectory.json", type: "file" }],
+        children: [{ path: "traces/trajectory/trajectory-format.json", type: "file" }],
       },
       {
-        path: "rollouts/codex",
+        path: "traces/codex",
         type: "folder",
-        children: [{ path: "rollouts/codex/codex-cli-gpt-5.4-xhigh.raw.jsonl", type: "file" }],
+        children: [{ path: "traces/codex/codex-cli.raw.jsonl", type: "file" }],
       },
       {
-        path: "rollouts/claude",
+        path: "traces/claude",
         type: "folder",
-        children: [{ path: "rollouts/claude/claude-code-opus-4.6-max.raw.jsonl", type: "file" }],
+        children: [{ path: "traces/claude/claude-code.raw.jsonl", type: "file" }],
       },
       {
-        path: "rollouts/gemini",
+        path: "traces/gemini",
         type: "folder",
-        children: [{ path: "rollouts/gemini/gemini-cli-3.1-pro.raw.json", type: "file" }],
+        children: [{ path: "traces/gemini/gemini-cli.raw.json", type: "file" }],
       },
       {
-        path: "rollouts/opencode",
+        path: "traces/opencode",
         type: "folder",
-        children: [{ path: "rollouts/opencode/opencode-gemini-3.1-pro.raw.json", type: "file" }],
+        children: [{ path: "traces/opencode/opencode.raw.json", type: "file" }],
       },
       {
-        path: "rollouts/mini-swe-agent",
+        path: "traces/mini-swe-agent",
         type: "folder",
-        children: [{ path: "rollouts/mini-swe-agent/mini-swe-agent-gpt-5.4.raw.json", type: "file" }],
+        children: [{ path: "traces/mini-swe-agent/mini-swe-agent.raw.json", type: "file" }],
       },
     ],
   },
