@@ -1,10 +1,10 @@
-# react-code-panes
+# @datacurve/react-code-panes
 
 VS Code-style split panes, editor tabs, sidebars, and bottom panels for React.
 
 It is a good fit for dashboards and inspector-style interfaces where the main content is already React components: code viewers, AI trajectories, logs, diffs, evaluation details, or other drill-down panels.
 
-![react-code-panes screenshot](docs/images/workbench-full.png)
+![@datacurve/react-code-panes screenshot](docs/images/workbench-full.png)
 
 The package is framework-agnostic on the React side and ships plain CSS for layout and theming. It works fine in Tailwind apps, but it is not implemented with Tailwind classes.
 
@@ -24,13 +24,13 @@ The package is framework-agnostic on the React side and ships plain CSS for layo
 ## Install
 
 ```bash
-npm install react-code-panes
+npm install @datacurve/react-code-panes
 ```
 
 Import the packaged stylesheet once in your app:
 
 ```tsx
-import "react-code-panes/styles.css";
+import "@datacurve/react-code-panes/styles.css";
 ```
 
 ## Quick Start
@@ -44,14 +44,14 @@ The core mental model is simple:
 - `activateOrOpenTab(...)` reuses the existing tab when that `id` is already open
 
 ```tsx
-import "react-code-panes/styles.css";
+import "@datacurve/react-code-panes/styles.css";
 import {
   Workbench,
   createLeaf,
   useActiveWorkbenchGroupId,
   useWorkbenchActions,
-} from "react-code-panes";
-import type { SidebarSection, Tab, TabFactory } from "react-code-panes";
+} from "@datacurve/react-code-panes";
+import type { SidebarSection, Tab, TabFactory } from "@datacurve/react-code-panes";
 
 type ReviewItem = {
   id: string;
@@ -160,7 +160,7 @@ export function ReviewWorkbench() {
 
 ## Tab Identity And Lifecycle
 
-`react-code-panes` is intentionally React-first.
+`@datacurve/react-code-panes` is intentionally React-first.
 
 - A tab is just metadata plus mounted React content.
 - `id` is the logical identity for that tab.
@@ -267,7 +267,7 @@ Override tokens on `.mosaic-workbench` or a parent element:
 Yes. The package is compatible with Tailwind apps.
 
 - Use Tailwind for the surrounding page and for content you render inside tabs or sidebars.
-- Import `react-code-panes/styles.css` once so the workbench layout styles are present.
+- Import `@datacurve/react-code-panes/styles.css` once so the workbench layout styles are present.
 - Override the CSS variables or add targeted selectors if you want the workbench to match your design system.
 
 ## Components

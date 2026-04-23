@@ -1,14 +1,14 @@
 {
-  "name": "react-code-panes",
+  "name": "@datacurve/react-code-panes",
   "version": "0.1.0",
   "description": "VS Code-style split pane and tab system for React",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ynng/react-code-panes.git"
+    "url": "git+https://github.com/datacurve-ai/react-code-panes.git"
   },
-  "homepage": "https://github.com/Ynng/react-code-panes#readme",
+  "homepage": "https://github.com/datacurve-ai/react-code-panes#readme",
   "bugs": {
-    "url": "https://github.com/Ynng/react-code-panes/issues"
+    "url": "https://github.com/datacurve-ai/react-code-panes/issues"
   },
   "keywords": [
     "react",
